@@ -1,4 +1,4 @@
-name: Publish to VS Code Marketplace
+name: Publish to VS Code Marketplace and Open VSX
 
 on:
   release:
@@ -24,7 +24,12 @@ jobs:
           npx vitest run
           xvfb-run -a node test/runTests.js
 
-      - name: Package and publish
+      - name: Publish to VS Code Marketplace
         run: npx vsce publish
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
+      - name: Publish to Open VSX
+        run: npx ovsx publish
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
