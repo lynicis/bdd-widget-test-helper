@@ -57,12 +57,12 @@ The service worker caches client assets aggressively. A plain reload can still s
 
 ```js
 await page.evaluate(async () => {
-  const regs = await navigator.serviceWorker?.getRegistrations() ?? [];
-  await Promise.all(regs.map(r => r.unregister()));
-  const keys = await caches?.keys() ?? [];
-  await Promise.all(keys.map(k => caches.delete(k)));
+  const regs = (await navigator.serviceWorker?.getRegistrations()) ?? [];
+  await Promise.all(regs.map((r) => r.unregister()));
+  const keys = (await caches?.keys()) ?? [];
+  await Promise.all(keys.map((k) => caches.delete(k)));
 });
-await page.reload({ waitUntil: 'domcontentloaded' });
+await page.reload({ waitUntil: "domcontentloaded" });
 ```
 
 ### Simulating mobile (only when explicitly requested)
@@ -71,14 +71,21 @@ The integrated browser panel clamps width, so `page.setViewportSize()` and CDP `
 
 ```js
 const client = await page.context().newCDPSession(page);
-await client.send('Emulation.setUserAgentOverride', {
-  userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
-  platform: 'iPhone'
+await client.send("Emulation.setUserAgentOverride", {
+  userAgent:
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+  platform: "iPhone",
 });
-await client.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
-await client.send('Emulation.setDeviceMetricsOverride', {
-  width: 393, height: 852, deviceScaleFactor: 3, mobile: true,
-  screenOrientation: { type: 'portraitPrimary', angle: 0 }
+await client.send("Emulation.setTouchEmulationEnabled", {
+  enabled: true,
+  maxTouchPoints: 5,
+});
+await client.send("Emulation.setDeviceMetricsOverride", {
+  width: 393,
+  height: 852,
+  deviceScaleFactor: 3,
+  mobile: true,
+  screenOrientation: { type: "portraitPrimary", angle: 0 },
 });
 await page.reload();
 ```

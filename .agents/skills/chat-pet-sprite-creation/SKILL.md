@@ -27,23 +27,23 @@ This skill distills the complete pet PR history. When rules conflict, use this p
 
 In particular, animation cleanup PR #330399 supersedes the old revive-sign flow and several earlier sprite/timing assumptions.
 
-| PR | Durable learning |
-|---|---|
-| #327063 | The pet is one semantic button; sprite canvases, images, eyes, and effects are visual-only and `aria-hidden`. Resolve asset URLs through `FileAccess`. |
-| #327412 | Model reactions as explicit states. Do not immediately repeat ordinary random reactions; sample rare transformations separately. |
-| #327588 | Double-buffer sprite images and swap only after the pending image loads. Never blank the active sprite while a new source is loading. |
-| #327696 | Stable/Insiders is a typed, persisted appearance choice. Keep variant naming and geometry systematic. |
-| #327714 | Animated art is a horizontal sprite sheet plus a deliberate static reduced-motion PNG. Timing is runtime data, not image metadata. |
-| #328334 | Persistent behavior such as “on the run” belongs in service state. Multi-phase animations advance from completion signals, not guessed delays. |
-| #328480 | A drag release must not also trigger a click reaction. Gestures that share pointer events need explicit suppression/ownership. |
-| #328530 | Waking consumes the interaction that woke the pet; it must not also trigger a random reaction. Reduced motion may skip the wake transition. |
-| #329121 | Coalesce gaze updates, pause sprite timers while the document is hidden, and resume from elapsed time rather than replaying missed frames. |
-| #329347 | Keep pixel-art pose changes in sprite frames and spatial motion in layout/CSS/physics. Complete falls from transition signals. |
-| #329729 | Face the interaction before starting a reaction. Give each transient state an explicit lifetime and use real completion events for chained phases. |
-| #329852 | Pointer and keyboard gestures need equivalent outcomes. Reduced motion preserves the state change while removing the travel animation. |
-| #329867 | Attention animations are bounded; clapping stops after the confirmation-attention window even if the confirmation remains pending. |
-| #330160 | Eyes are a composited runtime layer with tracking/blinking modes. Rapid facing changes can trigger a separate dizzy state. Wide art must respect live bounds. |
-| #330275 | Physics uses the body footprint, bounded frame steps, and explicit impact moments. Recompute geometry when layout changes during flight. |
+| PR      | Durable learning                                                                                                                                                            |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| #327063 | The pet is one semantic button; sprite canvases, images, eyes, and effects are visual-only and `aria-hidden`. Resolve asset URLs through `FileAccess`.                      |
+| #327412 | Model reactions as explicit states. Do not immediately repeat ordinary random reactions; sample rare transformations separately.                                            |
+| #327588 | Double-buffer sprite images and swap only after the pending image loads. Never blank the active sprite while a new source is loading.                                       |
+| #327696 | Stable/Insiders is a typed, persisted appearance choice. Keep variant naming and geometry systematic.                                                                       |
+| #327714 | Animated art is a horizontal sprite sheet plus a deliberate static reduced-motion PNG. Timing is runtime data, not image metadata.                                          |
+| #328334 | Persistent behavior such as “on the run” belongs in service state. Multi-phase animations advance from completion signals, not guessed delays.                              |
+| #328480 | A drag release must not also trigger a click reaction. Gestures that share pointer events need explicit suppression/ownership.                                              |
+| #328530 | Waking consumes the interaction that woke the pet; it must not also trigger a random reaction. Reduced motion may skip the wake transition.                                 |
+| #329121 | Coalesce gaze updates, pause sprite timers while the document is hidden, and resume from elapsed time rather than replaying missed frames.                                  |
+| #329347 | Keep pixel-art pose changes in sprite frames and spatial motion in layout/CSS/physics. Complete falls from transition signals.                                              |
+| #329729 | Face the interaction before starting a reaction. Give each transient state an explicit lifetime and use real completion events for chained phases.                          |
+| #329852 | Pointer and keyboard gestures need equivalent outcomes. Reduced motion preserves the state change while removing the travel animation.                                      |
+| #329867 | Attention animations are bounded; clapping stops after the confirmation-attention window even if the confirmation remains pending.                                          |
+| #330160 | Eyes are a composited runtime layer with tracking/blinking modes. Rapid facing changes can trigger a separate dizzy state. Wide art must respect live bounds.               |
+| #330275 | Physics uses the body footprint, bounded frame steps, and explicit impact moments. Recompute geometry when layout changes during flight.                                    |
 | #330399 | Latest animation contract: wide sleep/wake art, frame-aware blink composition, fixed-orientation decorations, and reverse despawn → forward respawn using one effect sheet. |
 
 ## The logical pixel

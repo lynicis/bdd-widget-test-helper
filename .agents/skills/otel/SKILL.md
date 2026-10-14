@@ -7,10 +7,10 @@ description: OpenTelemetry guidance for VS Code agent experiences. Use when chan
 
 Start by identifying the execution surface. VS Code has separate OTel pipelines with different owners and configuration:
 
-| Surface | Process and producer | Configuration | Authoritative VS Code document |
-|---|---|---|---|
-| Agent Host sessions (Copilot, Claude, Codex) | Provider-native telemetry routed by the Agent Host utility process | `chat.agentHost.otel.*` | [`src/vs/platform/agentHost/OTEL.md`](../../../src/vs/platform/agentHost/OTEL.md) |
-| Local Copilot Chat | Copilot Chat extension host and `IOTelService` | `github.copilot.chat.otel.*` | [`extensions/copilot/docs/monitoring/agent_monitoring.md`](../../../extensions/copilot/docs/monitoring/agent_monitoring.md) |
+| Surface                                      | Process and producer                                               | Configuration                | Authoritative VS Code document                                                                                              |
+| -------------------------------------------- | ------------------------------------------------------------------ | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Agent Host sessions (Copilot, Claude, Codex) | Provider-native telemetry routed by the Agent Host utility process | `chat.agentHost.otel.*`      | [`src/vs/platform/agentHost/OTEL.md`](../../../src/vs/platform/agentHost/OTEL.md)                                           |
+| Local Copilot Chat                           | Copilot Chat extension host and `IOTelService`                     | `github.copilot.chat.otel.*` | [`extensions/copilot/docs/monitoring/agent_monitoring.md`](../../../extensions/copilot/docs/monitoring/agent_monitoring.md) |
 
 Do not combine these pipelines or assume that a setting for one configures another.
 

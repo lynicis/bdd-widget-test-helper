@@ -27,14 +27,14 @@ Preserve reusable knowledge in the smallest authoritative artifact. A correction
 
 3. **Classify the feedback**
 
-   | Feedback kind | Destination |
-   |---------------|-------------|
-   | Task-specific preference or one-off adjustment | Do not persist |
-   | Concrete behavior that must not regress | Regression test |
+   | Feedback kind                                      | Destination                            |
+   | -------------------------------------------------- | -------------------------------------- |
+   | Task-specific preference or one-off adjustment     | Do not persist                         |
+   | Concrete behavior that must not regress            | Regression test                        |
    | Stable subsystem architecture or product invariant | Relevant design/specification document |
-   | Universal repository rule | Applicable instruction file |
-   | Reusable but not yet mature or proven guidance | `.github/learnings/<area>.md` |
-   | Tool-driven workflow | Relevant skill |
+   | Universal repository rule                          | Applicable instruction file            |
+   | Reusable but not yet mature or proven guidance     | `.github/learnings/<area>.md`          |
+   | Tool-driven workflow                               | Relevant skill                         |
 
 4. **Generalize carefully**
    - Preserve the principle, not the incident chronology.

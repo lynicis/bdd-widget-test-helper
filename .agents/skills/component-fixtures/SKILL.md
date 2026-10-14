@@ -28,33 +28,46 @@ src/vs/workbench/test/browser/componentFixtures/
 ## Basic Pattern
 
 ```typescript
-import { ComponentFixtureContext, createEditorServices, defineComponentFixture, defineThemedFixtureGroup } from './fixtureUtils.js';
+import {
+  ComponentFixtureContext,
+  createEditorServices,
+  defineComponentFixture,
+  defineThemedFixtureGroup,
+} from "./fixtureUtils.js";
 
-export default defineThemedFixtureGroup({ path: 'myFeature/' }, {
+export default defineThemedFixtureGroup(
+  { path: "myFeature/" },
+  {
     Default: defineComponentFixture({ render: renderMyComponent }),
     AnotherVariant: defineComponentFixture({ render: renderMyComponent }),
-});
+  },
+);
 
-function renderMyComponent({ container, disposableStore, theme }: ComponentFixtureContext): void {
-    container.style.width = '400px';
+function renderMyComponent({
+  container,
+  disposableStore,
+  theme,
+}: ComponentFixtureContext): void {
+  container.style.width = "400px";
 
-    const instantiationService = createEditorServices(disposableStore, {
-        colorTheme: theme,
-        additionalServices: (reg) => {
-            // Register additional services the component needs
-            reg.define(IMyService, MyServiceImpl);
-            reg.defineInstance(IMockService, mockInstance);
-        },
-    });
+  const instantiationService = createEditorServices(disposableStore, {
+    colorTheme: theme,
+    additionalServices: (reg) => {
+      // Register additional services the component needs
+      reg.define(IMyService, MyServiceImpl);
+      reg.defineInstance(IMockService, mockInstance);
+    },
+  });
 
-    const widget = disposableStore.add(
-        instantiationService.createInstance(MyWidget, /* constructor args */)
-    );
-    container.appendChild(widget.domNode);
+  const widget = disposableStore.add(
+    instantiationService.createInstance(MyWidget /* constructor args */),
+  );
+  container.appendChild(widget.domNode);
 }
 ```
 
 Key points:
+
 - **`defineThemedFixtureGroup`** automatically creates Dark and Light variants for each fixture
 - **`defineComponentFixture`** wraps your render function with theme setup, async readiness, and disposable management
 - **`createEditorServices`** provides a `TestInstantiationService` with base editor services pre-registered
@@ -66,32 +79,39 @@ Key points:
 Fixtures use Seti file icons by default. Select another built-in theme, or disable file icons, on the individual fixture:
 
 ```typescript
-defineComponentFixture({ fileIconTheme: 'vs-minimal', render: renderMyComponent });
-defineComponentFixture({ fileIconTheme: 'none', render: renderMyComponent });
+defineComponentFixture({
+  fileIconTheme: "vs-minimal",
+  render: renderMyComponent,
+});
+defineComponentFixture({ fileIconTheme: "none", render: renderMyComponent });
 ```
 
 When the rendered component reads `IThemeService`, pass the selected theme from `ComponentFixtureContext` to `createEditorServices`:
 
 ```typescript
-function renderMyComponent({ disposableStore, theme, fileIconTheme }: ComponentFixtureContext): void {
-	const instantiationService = createEditorServices(disposableStore, {
-		colorTheme: theme,
-		fileIconTheme,
-	});
+function renderMyComponent({
+  disposableStore,
+  theme,
+  fileIconTheme,
+}: ComponentFixtureContext): void {
+  const instantiationService = createEditorServices(disposableStore, {
+    colorTheme: theme,
+    fileIconTheme,
+  });
 }
 ```
 
 ## Utilities from fixtureUtils.ts
 
-| Export | Purpose |
-|---|---|
-| `defineComponentFixture` | Creates Dark/Light themed fixture variants from a render function |
-| `defineThemedFixtureGroup` | Groups multiple themed fixtures into a named fixture group |
-| `createEditorServices` | Creates `TestInstantiationService` with all base editor services |
-| `registerWorkbenchServices` | Registers additional workbench services (context menu, label, etc.) |
-| `createTextModel` | Creates a text model via `ModelService` for editor fixtures |
-| `setupTheme` | Applies theme CSS to a container (called automatically by `defineComponentFixture`) |
-| `darkTheme` / `lightTheme` | Pre-loaded `ColorThemeData` instances |
+| Export                      | Purpose                                                                             |
+| --------------------------- | ----------------------------------------------------------------------------------- |
+| `defineComponentFixture`    | Creates Dark/Light themed fixture variants from a render function                   |
+| `defineThemedFixtureGroup`  | Groups multiple themed fixtures into a named fixture group                          |
+| `createEditorServices`      | Creates `TestInstantiationService` with all base editor services                    |
+| `registerWorkbenchServices` | Registers additional workbench services (context menu, label, etc.)                 |
+| `createTextModel`           | Creates a text model via `ModelService` for editor fixtures                         |
+| `setupTheme`                | Applies theme CSS to a container (called automatically by `defineComponentFixture`) |
+| `darkTheme` / `lightTheme`  | Pre-loaded `ColorThemeData` instances                                               |
 
 **Important:** Only `fixtureUtils.ts` may import from `@vscode/component-explorer`. All fixture files must go through the helpers in `fixtureUtils.ts`.
 
@@ -109,15 +129,15 @@ Many VS Code components have CSS rules scoped to deep ancestor selectors (e.g., 
 
 ```typescript
 function render({ container }: ComponentFixtureContext): void {
-    container.classList.add('interactive-session');
+  container.classList.add("interactive-session");
 
-    // Recreate ancestor structure that CSS selectors expect
-    const inputPart = dom.$('.interactive-input-part');
-    const widgetContainer = dom.$('.widget-container');
-    inputPart.appendChild(widgetContainer);
-    container.appendChild(inputPart);
+  // Recreate ancestor structure that CSS selectors expect
+  const inputPart = dom.$(".interactive-input-part");
+  const widgetContainer = dom.$(".widget-container");
+  inputPart.appendChild(widgetContainer);
+  container.appendChild(inputPart);
 
-    widgetContainer.appendChild(myWidget.domNode);
+  widgetContainer.appendChild(myWidget.domNode);
 }
 ```
 
@@ -135,12 +155,12 @@ Register extra services via `additionalServices`:
 
 ```typescript
 createEditorServices(disposableStore, {
-    additionalServices: (reg) => {
-        // Class-based (instantiated by DI):
-        reg.define(IMyService, MyServiceImpl);
-        // Instance-based (pre-constructed):
-        reg.defineInstance(IMyService, myMockInstance);
-    },
+  additionalServices: (reg) => {
+    // Class-based (instantiated by DI):
+    reg.define(IMyService, MyServiceImpl);
+    // Instance-based (pre-constructed):
+    reg.defineInstance(IMyService, myMockInstance);
+  },
 });
 ```
 
@@ -149,18 +169,21 @@ createEditorServices(disposableStore, {
 Use the `mock<T>()` helper from `base/test/common/mock.js` to create mock service instances:
 
 ```typescript
-import { mock } from '../../../../base/test/common/mock.js';
+import { mock } from "../../../../base/test/common/mock.js";
 
-const myService = new class extends mock<IMyService>() {
-    override someMethod(): string { return 'test'; }
-    override onSomeEvent = Event.None;
-};
+const myService = new (class extends mock<IMyService>() {
+  override someMethod(): string {
+    return "test";
+  }
+  override onSomeEvent = Event.None;
+})();
 reg.defineInstance(IMyService, myService);
 ```
 
 For mock view models or data objects:
+
 ```typescript
-const element = new class extends mock<IChatRequestViewModel>() { }();
+const element = new (class extends mock<IChatRequestViewModel>() {})();
 ```
 
 ## Async Rendering
@@ -190,28 +213,31 @@ Validate at the same readiness boundary CI uses: capture immediately after the h
 ### Pitfall: DOM reparenting causes flickering
 
 Avoid moving rendered widgets between DOM parents after initial render. This causes:
+
 - Layout recalculation (the widget jumps as `position: absolute` coordinates become invalid)
 - Focus loss (blur events can trigger hide logic in widgets like QuickInput)
 - Screenshot instability (the component explorer may capture an intermediate layout state)
 
 **Bad pattern — reparenting a widget after async wait:**
+
 ```typescript
 async function render({ container }: ComponentFixtureContext): Promise<void> {
-    const host = document.createElement('div');
-    container.appendChild(host);
-    // ... create widget inside host ...
-    await waitForWidget();
-    container.appendChild(widget);  // BAD: reparenting causes flicker
-    host.remove();
+  const host = document.createElement("div");
+  container.appendChild(host);
+  // ... create widget inside host ...
+  await waitForWidget();
+  container.appendChild(widget); // BAD: reparenting causes flicker
+  host.remove();
 }
 ```
 
 **Better pattern — render in-place with the correct DOM structure from the start:**
+
 ```typescript
 function render({ container }: ComponentFixtureContext): void {
-    // Set up the correct DOM structure first, then create the widget inside it
-    const widget = createWidget(container);
-    container.appendChild(widget.domNode);
+  // Set up the correct DOM structure first, then create the widget inside it
+  const widget = createWidget(container);
+  container.appendChild(widget.domNode);
 }
 ```
 
@@ -227,10 +253,14 @@ If a component's CSS only works inside a deeply nested selector like `.workbench
 
 ```css
 /* Before: requires specific ancestors */
-.workbench .sidebar .my-view .my-widget .header { font-weight: bold; }
+.workbench .sidebar .my-view .my-widget .header {
+  font-weight: bold;
+}
 
 /* After: self-contained */
-.my-widget .header { font-weight: bold; }
+.my-widget .header {
+  font-weight: bold;
+}
 ```
 
 If the component shares styles with its parent (e.g., inheriting background color), use CSS custom properties rather than relying on ancestor selectors.
@@ -242,12 +272,15 @@ If a component reaches into singletons or global state instead of using DI, refa
 ```typescript
 // Before: hard to mock in fixtures
 class MyWidget {
-    private readonly config = getSomeGlobalConfig();
+  private readonly config = getSomeGlobalConfig();
 }
 
 // After: injectable and testable
 class MyWidget {
-    constructor(@IConfigurationService private readonly configService: IConfigurationService) { }
+  constructor(
+    @IConfigurationService
+    private readonly configService: IConfigurationService,
+  ) {}
 }
 ```
 
@@ -257,7 +290,7 @@ Components that auto-focus on creation or run animations cause flaky screenshots
 
 ```typescript
 interface IMyWidgetOptions {
-    shouldAutoFocus?: boolean;
+  shouldAutoFocus?: boolean;
 }
 ```
 
@@ -271,11 +304,11 @@ Many components have lifecycle states (loading → active → completed). If the
 // The fixture can pass pre-filled data to render the summary/completed state
 // without simulating the full user interaction flow.
 const carousel: IChatQuestionCarousel = {
-    questions,
-    allowSkip: true,
-    kind: 'questionCarousel',
-    isUsed: true,           // Already completed
-    data: { 'q1': 'answer' }, // Pre-filled answers
+  questions,
+  allowSkip: true,
+  kind: "questionCarousel",
+  isUsed: true, // Already completed
+  data: { q1: "answer" }, // Pre-filled answers
 };
 ```
 
@@ -296,17 +329,17 @@ When designing new UI components, follow these practices to make them easy to fi
 ```typescript
 // Good: container is passed in
 class MyWidget {
-    constructor(container: HTMLElement, @IFoo foo: IFoo) {
-        this.domNode = dom.append(container, dom.$('.my-widget'));
-    }
+  constructor(container: HTMLElement, @IFoo foo: IFoo) {
+    this.domNode = dom.append(container, dom.$(".my-widget"));
+  }
 }
 
 // Also good: widget creates its own domNode for the caller to place
 class MyWidget {
-    readonly domNode: HTMLElement;
-    constructor(@IFoo foo: IFoo) {
-        this.domNode = dom.$('.my-widget');
-    }
+  readonly domNode: HTMLElement;
+  constructor(@IFoo foo: IFoo) {
+    this.domNode = dom.$(".my-widget");
+  }
 }
 ```
 
@@ -339,8 +372,8 @@ Components that measure the window or read layout dimensions during construction
 
 ```typescript
 // Prefer: use CSS for sizing, or accept dimensions as parameters
-container.style.width = '400px';
-container.style.height = '300px';
+container.style.width = "400px";
+container.style.height = "300px";
 
 // Avoid: reading from layoutService during construction
 const width = this.layoutService.mainContainerDimension.width;
@@ -352,7 +385,7 @@ Auto-focus can interfere with screenshot stability. Provide options to disable i
 
 ```typescript
 interface IMyWidgetOptions {
-    shouldAutoFocus?: boolean;  // Fixtures pass false
+  shouldAutoFocus?: boolean; // Fixtures pass false
 }
 ```
 
@@ -376,17 +409,29 @@ Create variants to show different states of the same component:
 
 ```typescript
 export default defineThemedFixtureGroup({
-    // Different data states
-    Empty: defineComponentFixture({ render: (ctx) => renderWidget(ctx, { items: [] }) }),
-    WithItems: defineComponentFixture({ render: (ctx) => renderWidget(ctx, { items: sampleItems }) }),
+  // Different data states
+  Empty: defineComponentFixture({
+    render: (ctx) => renderWidget(ctx, { items: [] }),
+  }),
+  WithItems: defineComponentFixture({
+    render: (ctx) => renderWidget(ctx, { items: sampleItems }),
+  }),
 
-    // Different configurations
-    ReadOnly: defineComponentFixture({ render: (ctx) => renderWidget(ctx, { readonly: true }) }),
-    Editable: defineComponentFixture({ render: (ctx) => renderWidget(ctx, { readonly: false }) }),
+  // Different configurations
+  ReadOnly: defineComponentFixture({
+    render: (ctx) => renderWidget(ctx, { readonly: true }),
+  }),
+  Editable: defineComponentFixture({
+    render: (ctx) => renderWidget(ctx, { readonly: false }),
+  }),
 
-    // Lifecycle states
-    Loading: defineComponentFixture({ render: (ctx) => renderWidget(ctx, { state: 'loading' }) }),
-    Completed: defineComponentFixture({ render: (ctx) => renderWidget(ctx, { state: 'done' }) }),
+  // Lifecycle states
+  Loading: defineComponentFixture({
+    render: (ctx) => renderWidget(ctx, { state: "loading" }),
+  }),
+  Completed: defineComponentFixture({
+    render: (ctx) => renderWidget(ctx, { state: "done" }),
+  }),
 });
 ```
 
@@ -394,10 +439,10 @@ export default defineThemedFixtureGroup({
 
 Update this section with insights from your fixture development experience!
 
-* Do not copy the component to the fixture and modify it there. Always adapt the original component to be fixture-friendly, then render it in the fixture. This ensures the fixture tests the real component code and lifecycle, rather than a modified version that may hide bugs.
+- Do not copy the component to the fixture and modify it there. Always adapt the original component to be fixture-friendly, then render it in the fixture. This ensures the fixture tests the real component code and lifecycle, rather than a modified version that may hide bugs.
 
-* **Don't recompose child widgets in fixtures.** Never manually instantiate and add a sub-widget (e.g., a toolbar content widget) that the parent component is supposed to create. Instead, configure the parent correctly (e.g., set the right editor option, register the right provider) so the child appears through the normal code path. Manually recomposing hides integration bugs and doesn't test the real widget lifecycle.
+- **Don't recompose child widgets in fixtures.** Never manually instantiate and add a sub-widget (e.g., a toolbar content widget) that the parent component is supposed to create. Instead, configure the parent correctly (e.g., set the right editor option, register the right provider) so the child appears through the normal code path. Manually recomposing hides integration bugs and doesn't test the real widget lifecycle.
 
-* **Describe state as data for service-heavy components.** When a component reads many services, give it one harness that takes plain state and renders it through the real state-owning services and production menus, instead of per-fixture mocks and DOM hacks. Fixtures then only list data, and a new feature adds a state field to the harness. The sessions list harness (`sessionsListFixtureUtils.ts`) follows this pattern; its real toolbars exposed header bugs that stubbed menus had hidden.
+- **Describe state as data for service-heavy components.** When a component reads many services, give it one harness that takes plain state and renders it through the real state-owning services and production menus, instead of per-fixture mocks and DOM hacks. Fixtures then only list data, and a new feature adds a state field to the harness. The sessions list harness (`sessionsListFixtureUtils.ts`) follows this pattern; its real toolbars exposed header bugs that stubbed menus had hidden.
 
-* **Never vary process-wide registrations per fixture.** The explorer UI mounts all fixtures of a folder at once, and they share command, menu, and other global registries. Register shared actions once, the same for every fixture, and vary per-fixture presentation through the fixture's own services, such as its menu service. Screenshot runs render fixtures one at a time and don't catch mount-order races, so preview the whole folder (`___explorer?fixture=<folder>`) to check.
+- **Never vary process-wide registrations per fixture.** The explorer UI mounts all fixtures of a folder at once, and they share command, menu, and other global registries. Register shared actions once, the same for every fixture, and vary per-fixture presentation through the fixture's own services, such as its menu service. Screenshot runs render fixtures one at a time and don't catch mount-order races, so preview the whole folder (`___explorer?fixture=<folder>`) to check.

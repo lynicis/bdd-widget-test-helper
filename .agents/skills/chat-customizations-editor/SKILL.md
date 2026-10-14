@@ -15,12 +15,12 @@ Split-view management pane for AI customization items across workspace, user, ex
 
 ## Key Folders
 
-| Folder | What |
-|--------|------|
-| `src/vs/workbench/contrib/chat/common/` | `ICustomizationHarnessService`, `ISectionOverride`, `ICustomizationItemProvider` — shared interfaces |
-| `src/vs/workbench/contrib/chat/browser/aiCustomization/` | Management editor, list widgets (prompts, MCP, plugins), harness service registration |
-| `src/vs/sessions/contrib/chat/browser/` | Sessions-window overrides (harness service, workspace service) |
-| `src/vs/sessions/contrib/sessions/browser/` | Sessions tree view counts and toolbar |
+| Folder                                                   | What                                                                                                 |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `src/vs/workbench/contrib/chat/common/`                  | `ICustomizationHarnessService`, `ISectionOverride`, `ICustomizationItemProvider` — shared interfaces |
+| `src/vs/workbench/contrib/chat/browser/aiCustomization/` | Management editor, list widgets (prompts, MCP, plugins), harness service registration                |
+| `src/vs/sessions/contrib/chat/browser/`                  | Sessions-window overrides (harness service, workspace service)                                       |
+| `src/vs/sessions/contrib/sessions/browser/`              | Sessions tree view counts and toolbar                                                                |
 
 When changing harness descriptor interfaces or factory functions, verify both core and sessions registrations compile.
 
@@ -36,13 +36,13 @@ Principle: the UI widgets read everything from the descriptor — no harness-spe
 
 The proposed API in `src/vscode-dts/vscode.proposed.chatSessionCustomizationProvider.d.ts` lets extensions register customization providers. Changes to `ICustomizationItem` or `ICustomizationItemProvider` must be kept in sync across the full chain:
 
-| Layer | File | Type |
-|-------|------|------|
-| Extension API | `vscode.proposed.chatSessionCustomizationProvider.d.ts` | `ChatSessionCustomizationItem` |
-| IPC DTO | `extHost.protocol.ts` | `IChatSessionCustomizationItemDto` |
-| ExtHost mapping | `extHostChatAgents2.ts` | `$provideChatSessionCustomizations()` |
-| MainThread mapping | `mainThreadChatAgents2.ts` | `provideChatSessionCustomizations` callback |
-| Internal interface | `customizationHarnessService.ts` | `ICustomizationItem` |
+| Layer              | File                                                    | Type                                        |
+| ------------------ | ------------------------------------------------------- | ------------------------------------------- |
+| Extension API      | `vscode.proposed.chatSessionCustomizationProvider.d.ts` | `ChatSessionCustomizationItem`              |
+| IPC DTO            | `extHost.protocol.ts`                                   | `IChatSessionCustomizationItemDto`          |
+| ExtHost mapping    | `extHostChatAgents2.ts`                                 | `$provideChatSessionCustomizations()`       |
+| MainThread mapping | `mainThreadChatAgents2.ts`                              | `provideChatSessionCustomizations` callback |
+| Internal interface | `customizationHarnessService.ts`                        | `ICustomizationItem`                        |
 
 When adding fields to `ICustomizationItem`, update all five layers. The proposed API `.d.ts` is additive-only (new optional fields are backward-compatible and do not require a version bump).
 
@@ -56,21 +56,22 @@ The management editor fixture supports a `selectedSection` option to render any 
 
 **Available fixture IDs** (use with `mcp_component-exp_screenshot`):
 
-| Fixture ID pattern | Tab shown |
-|---|---|
-| `chat/aiCustomizations/aiCustomizationManagementEditor/AgentsTab/{Dark,Light}` | Agents |
-| `chat/aiCustomizations/aiCustomizationManagementEditor/SkillsTab/{Dark,Light}` | Skills |
-| `chat/aiCustomizations/aiCustomizationManagementEditor/InstructionsTab/{Dark,Light}` | Instructions |
-| `chat/aiCustomizations/aiCustomizationManagementEditor/HooksTab/{Dark,Light}` | Hooks |
-| `chat/aiCustomizations/aiCustomizationManagementEditor/PromptsTab/{Dark,Light}` | Prompts |
-| `chat/aiCustomizations/aiCustomizationManagementEditor/McpServersTab/{Dark,Light}` | MCP Servers |
-| `chat/aiCustomizations/aiCustomizationManagementEditor/PluginsTab/{Dark,Light}` | Plugins |
-| `chat/aiCustomizations/aiCustomizationManagementEditor/LocalHarness/{Dark,Light}` | Default (Agents, Local harness) |
-| `chat/aiCustomizations/aiCustomizationManagementEditor/CliHarness/{Dark,Light}` | Default (Agents, CLI harness) |
-| `chat/aiCustomizations/aiCustomizationManagementEditor/ClaudeHarness/{Dark,Light}` | Default (Agents, Claude harness) |
-| `chat/aiCustomizations/aiCustomizationManagementEditor/Sessions/{Dark,Light}` | Sessions window variant |
+| Fixture ID pattern                                                                   | Tab shown                        |
+| ------------------------------------------------------------------------------------ | -------------------------------- |
+| `chat/aiCustomizations/aiCustomizationManagementEditor/AgentsTab/{Dark,Light}`       | Agents                           |
+| `chat/aiCustomizations/aiCustomizationManagementEditor/SkillsTab/{Dark,Light}`       | Skills                           |
+| `chat/aiCustomizations/aiCustomizationManagementEditor/InstructionsTab/{Dark,Light}` | Instructions                     |
+| `chat/aiCustomizations/aiCustomizationManagementEditor/HooksTab/{Dark,Light}`        | Hooks                            |
+| `chat/aiCustomizations/aiCustomizationManagementEditor/PromptsTab/{Dark,Light}`      | Prompts                          |
+| `chat/aiCustomizations/aiCustomizationManagementEditor/McpServersTab/{Dark,Light}`   | MCP Servers                      |
+| `chat/aiCustomizations/aiCustomizationManagementEditor/PluginsTab/{Dark,Light}`      | Plugins                          |
+| `chat/aiCustomizations/aiCustomizationManagementEditor/LocalHarness/{Dark,Light}`    | Default (Agents, Local harness)  |
+| `chat/aiCustomizations/aiCustomizationManagementEditor/CliHarness/{Dark,Light}`      | Default (Agents, CLI harness)    |
+| `chat/aiCustomizations/aiCustomizationManagementEditor/ClaudeHarness/{Dark,Light}`   | Default (Agents, Claude harness) |
+| `chat/aiCustomizations/aiCustomizationManagementEditor/Sessions/{Dark,Light}`        | Sessions window variant          |
 
 **Adding a new tab fixture:** Add a variant to the `defineThemedFixtureGroup` in `aiCustomizationManagementEditor.fixture.ts`:
+
 ```typescript
 MyNewTab: defineComponentFixture({
     labels: { kind: 'screenshot' },
@@ -86,6 +87,7 @@ The `selectedSection` calls `editor.selectSectionById()` after `setInput`, which
 ### Populating test data
 
 Each customization type requires its own mock path in `createMockPromptsService`:
+
 - **Agents** — `getCustomAgents()` returns agent objects
 - **Skills** — `findAgentSkills()` returns `IAgentSkill[]`
 - **Prompts** — `getPromptSlashCommands()` returns `IChatPromptSlashCommand[]`
@@ -98,6 +100,7 @@ All test data lives in `allFiles` (prompt-based items) and the `mcpWorkspace/Use
 ### Exercising built-in grouping
 
 The list widget regroups items from the default chat extension under a "Built-in" header. Three things must be in place for fixtures to exercise this:
+
 1. Include `BUILTIN_STORAGE` in the harness descriptor's visible sources
 2. Mock `IProductService.defaultChatAgent.chatExtensionId` (e.g., `'GitHub.copilot-chat'`)
 3. Give mock items extension provenance via `extensionId` / `extensionDisplayName` matching that ID
@@ -107,6 +110,7 @@ Without all three, built-in regrouping silently doesn't run and the fixture only
 ### Editor contribution service mocks
 
 The management editor embeds a `CodeEditorWidget`. Electron-side editor contributions (e.g., `AgentFeedbackEditorWidgetContribution`) are instantiated automatically and crash if their injected services aren't registered. The fixture must mock at minimum:
+
 - `IAgentFeedbackService` — needs `onDidChangeFeedback`, `onDidChangeNavigation`, `onDidAddFeedback`, `onDidConvertFeedback`, `onDidAddReply`, `onDidSubmitFeedback` as `Event.None`
 - `ICodeReviewService` — needs `getReviewState()` / `getPRReviewState()` returning idle observables
 - `IChatEditingService` — needs `editingSessionsObs` as empty observable
@@ -134,7 +138,7 @@ Don't add `blocksCi` to every fixture — only ones that cover critical layout p
 Scrollbar fade transitions cause screenshot instability — the scrollbar shifts from `visible` to `invisible fade` class ~2 seconds after a programmatic scroll. After calling `revealLastItem()` or any scroll action, wait for the transition to complete before the fixture's render promise resolves:
 
 ```typescript
-await new Promise(resolve => setTimeout(resolve, 2400));
+await new Promise((resolve) => setTimeout(resolve, 2400));
 // Then optionally poll until .scrollbar.vertical loses the 'visible' class
 ```
 
@@ -177,21 +181,23 @@ npx @playwright/cli eval "document.title" 2>&1
 ```
 
 Key diagnostics:
+
 - **`rows`** — fewer than expected means `list.layout()` never received the correct viewport height.
 - **`seStH`** — empty means the list was never properly laid out.
 - **`listH` vs `wH`** — list container height should be widget height minus search bar minus footer.
 
 ### Common layout issues
 
-| Symptom | Root cause | Fix pattern |
-|---------|-----------|-------------|
-| List shows 0-1 rows in a tall container | `layout()` bailed out because `offsetHeight` returned 0 during `display:none → visible` transition | Defer layout via `DOM.getWindow(this.element).requestAnimationFrame(...)` |
-| Badge or row content clips at right edge | Widget container missing `overflow: hidden` | Add `overflow: hidden` to the widget's CSS class |
-| Items visible in fixture but not in product | Fixture uses many mock items; real product has few | Add fixture variants with fewer items or narrower dimensions (`width`/`height` options) |
+| Symptom                                     | Root cause                                                                                         | Fix pattern                                                                             |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| List shows 0-1 rows in a tall container     | `layout()` bailed out because `offsetHeight` returned 0 during `display:none → visible` transition | Defer layout via `DOM.getWindow(this.element).requestAnimationFrame(...)`               |
+| Badge or row content clips at right edge    | Widget container missing `overflow: hidden`                                                        | Add `overflow: hidden` to the widget's CSS class                                        |
+| Items visible in fixture but not in product | Fixture uses many mock items; real product has few                                                 | Add fixture variants with fewer items or narrower dimensions (`width`/`height` options) |
 
 ### Fixture vs real product gaps
 
 Fixtures render at a fixed size (default 900×600) with many mock items. They won't catch:
+
 - **Reflow timing** — the real product's `display:none → visible` transition may not have reflowed before `layout()` fires
 - **Narrow windows** — add narrow fixture variants (e.g., `width: 550, height: 400`)
 - **Real data counts** — a user with 1 MCP server sees very different layout than a fixture with 12

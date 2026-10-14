@@ -16,14 +16,14 @@ Both forward extra arguments after `--` to the runner (`test/smoke/test/index.js
 
 ## Common options
 
-| Option | Description |
-|--------|-------------|
-| `-g <pattern>` (alias `-f`) | Grep filter on test/suite titles (mocha `grep`). |
-| `--build <path>` | Run against a packaged build instead of the compiled-from-source dev build. |
-| `--tracing` | Capture Playwright traces (and screenshots on failure). |
-| `--web` | Run the browser smoke tests instead of Electron. |
-| `--headless` | Headless browser (used with `--web`). |
-| `--remote` | Run the remote smoke tests. |
+| Option                      | Description                                                                 |
+| --------------------------- | --------------------------------------------------------------------------- |
+| `-g <pattern>` (alias `-f`) | Grep filter on test/suite titles (mocha `grep`).                            |
+| `--build <path>`            | Run against a packaged build instead of the compiled-from-source dev build. |
+| `--tracing`                 | Capture Playwright traces (and screenshots on failure).                     |
+| `--web`                     | Run the browser smoke tests instead of Electron.                            |
+| `--headless`                | Headless browser (used with `--web`).                                       |
+| `--remote`                  | Run the remote smoke tests.                                                 |
 
 ```bash
 # Run everything (Electron, from source)
@@ -55,11 +55,13 @@ This is a debugging aid, **not a permanent CI fixture**:
 Drop the loop next to the existing Electron smoke step, gated on the same condition, in the test step(s) for the platform(s) where the flake reproduces:
 
 **GitHub PR workflows** (run from source, no `--build`):
+
 - `.github/workflows/pr-linux-test.yml` (bash; sets `DISPLAY: ":10"`)
 - `.github/workflows/pr-darwin-test.yml` (bash; no `DISPLAY`)
 - `.github/workflows/pr-win32-test.yml` (PowerShell)
 
 **Azure DevOps test steps** (run against the packaged build via `--build`):
+
 - `build/azure-pipelines/linux/steps/product-build-linux-test.yml`
 - `build/azure-pipelines/darwin/steps/product-build-darwin-test.yml`
 - `build/azure-pipelines/win32/steps/product-build-win32-test.yml`
@@ -140,8 +142,6 @@ Under `smoke-tests-<suite>/` (`smoke-tests-electron/`, `smoke-tests-browser/`, o
 - `<N>_suite_<Suite_Name>/playwright-screenshot-*.png` — last-frame screenshot captured when a test fails (only when the suite ran with `--tracing`).
 
 `<Suite_Name>` is the mocha suite title with non-word characters replaced by `_`. See also the `code-oss-logs` skill.
-
-
 
 ## Distinction from other test types
 

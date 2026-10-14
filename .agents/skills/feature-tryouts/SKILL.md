@@ -13,13 +13,13 @@ The authoritative contributor contract is [src/vs/workbench/contrib/onboarding/R
 
 Choose the least invasive level that provides value:
 
-| Level | Use when |
-|---|---|
-| **Try it** | Behavior can be prepared safely with isolated data |
-| **Guide me** | Opening and highlighting a real control is sufficient |
-| **Help me get ready** | The user must perform a prerequisite |
-| **Use my context** | The action must bind to an exact editor, session, or widget |
-| **Explain only** | Interaction would be unsafe, misleading, or impossible |
+| Level                 | Use when                                                    |
+| --------------------- | ----------------------------------------------------------- |
+| **Try it**            | Behavior can be prepared safely with isolated data          |
+| **Guide me**          | Opening and highlighting a real control is sufficient       |
+| **Help me get ready** | The user must perform a prerequisite                        |
+| **Use my context**    | The action must bind to an exact editor, session, or widget |
+| **Explain only**      | Interaction would be unsafe, misleading, or impossible      |
 
 A spotlight alone can be useful. A tryout does not need to reproduce the complete feature.
 
@@ -42,13 +42,13 @@ Prefer feature-owned contributions and commands. Shared onboarding code should p
 
 ## 3. Choose a presentation
 
-| Need | Presentation |
-|---|---|
-| Run an existing product command with installed-code arguments | `command` |
-| Open a contributed view or view container | `openView` |
-| Show deterministic, read-only text or a comparison | `editorSample` |
-| Prepare an exact feature-owned UI instance | Feature-owned launch presentation |
-| Launch a surface and guide one or more controls | Guided presentation |
+| Need                                                          | Presentation                      |
+| ------------------------------------------------------------- | --------------------------------- |
+| Run an existing product command with installed-code arguments | `command`                         |
+| Open a contributed view or view container                     | `openView`                        |
+| Show deterministic, read-only text or a comparison            | `editorSample`                    |
+| Prepare an exact feature-owned UI instance                    | Feature-owned launch presentation |
+| Launch a surface and guide one or more controls               | Guided presentation               |
 
 Add a feature-owned presentation only when the built-in types cannot express the required lifecycle safely.
 
@@ -179,19 +179,19 @@ Use [releaseNotesTryouts.md](../../../src/vs/workbench/contrib/onboarding/test/b
 
 Add the smallest applicable coverage:
 
-| Capability | Required coverage |
-|---|---|
-| Registration | Exact ID, metadata, payload, and availability |
-| Preparation | No execution during availability or preparation |
-| Cancellation | No late effects after cancellation |
-| Setup | Offered but never automatically executed |
-| Guided target | Owner callback and missing-target behavior |
-| Scoped target | Two visible instances; prepared instance wins |
-| Command | Missing command fails closed |
-| Chat | No send, no draft replacement, exact widget binding |
-| Agents handoff | Cancellation, acknowledgment, rejection, and supersession |
-| Integrated Browser | Native view hides behind the overlay |
-| Release notes | Unknown and malformed links remain inert |
+| Capability         | Required coverage                                         |
+| ------------------ | --------------------------------------------------------- |
+| Registration       | Exact ID, metadata, payload, and availability             |
+| Preparation        | No execution during availability or preparation           |
+| Cancellation       | No late effects after cancellation                        |
+| Setup              | Offered but never automatically executed                  |
+| Guided target      | Owner callback and missing-target behavior                |
+| Scoped target      | Two visible instances; prepared instance wins             |
+| Command            | Missing command fails closed                              |
+| Chat               | No send, no draft replacement, exact widget binding       |
+| Agents handoff     | Cancellation, acknowledgment, rejection, and supersession |
+| Integrated Browser | Native view hides behind the overlay                      |
+| Release notes      | Unknown and malformed links remain inert                  |
 
 Framework references:
 

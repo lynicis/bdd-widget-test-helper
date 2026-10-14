@@ -36,9 +36,9 @@ Use the helpers in [parseSnapshot.ts](./helpers/parseSnapshot.ts) to load snapsh
 For very large snapshots, the helper may still be too eager. Node cannot create a Buffer larger than roughly 2 GiB, so snapshots above that size can fail with `ERR_FS_FILE_TOO_LARGE` even before parsing. In that case, do not try to raise `--max-old-space-size` and retry the same full-file read. Switch to a streaming script.
 
 ```typescript
-import { parseSnapshot, buildGraph } from '../helpers/parseSnapshot.ts';
+import { parseSnapshot, buildGraph } from "../helpers/parseSnapshot.ts";
 
-const data = parseSnapshot('/path/to/snapshot.heapsnapshot');
+const data = parseSnapshot("/path/to/snapshot.heapsnapshot");
 const graph = buildGraph(data);
 ```
 
@@ -61,16 +61,27 @@ Useful tricks:
 Example large-snapshot workflow:
 
 ```javascript
-import { findArrayStart, findTokenOffsets, parseMeta, streamNumberTuples } from '../../helpers/streamSnapshot.mjs';
+import {
+  findArrayStart,
+  findTokenOffsets,
+  parseMeta,
+  streamNumberTuples,
+} from "../../helpers/streamSnapshot.mjs";
 
 const { size, offsets } = findTokenOffsets(snapshotPath);
 const meta = parseMeta(snapshotPath);
 const nodeFieldCount = meta.node_fields.length;
 const nodesStart = findArrayStart(snapshotPath, offsets.get('"nodes"'));
 
-streamNumberTuples(snapshotPath, nodesStart, offsets.get('"edges"'), nodeFieldCount, (node, nodeIndex) => {
+streamNumberTuples(
+  snapshotPath,
+  nodesStart,
+  offsets.get('"edges"'),
+  nodeFieldCount,
+  (node, nodeIndex) => {
     // node is reused for speed; copy it before storing.
-});
+  },
+);
 ```
 
 ```bash
@@ -85,9 +96,12 @@ node --max-old-space-size=24576 scratchpad/YYYY-MM-DD-topic/traceNodes.mjs /path
 Use [compareSnapshots.ts](./helpers/compareSnapshots.ts) to diff two snapshots:
 
 ```typescript
-import { compareSnapshots } from '../helpers/compareSnapshots.ts';
+import { compareSnapshots } from "../helpers/compareSnapshots.ts";
 
-const result = compareSnapshots('/path/to/before.heapsnapshot', '/path/to/after.heapsnapshot');
+const result = compareSnapshots(
+  "/path/to/before.heapsnapshot",
+  "/path/to/after.heapsnapshot",
+);
 // result.topBySize, result.topByCount, result.newObjectGroups, result.summary
 ```
 
@@ -96,10 +110,14 @@ const result = compareSnapshots('/path/to/before.heapsnapshot', '/path/to/after.
 Use [findRetainers.ts](./helpers/findRetainers.ts) to trace why an object is alive:
 
 ```typescript
-import { findRetainerPaths } from '../helpers/findRetainers.ts';
+import { findRetainerPaths } from "../helpers/findRetainers.ts";
 
 // Find what keeps ChatModel instances alive (skipping weak edges)
-findRetainerPaths(graph, 'ChatModel', { maxPaths: 5, maxDepth: 25, maxAttempts: 200 });
+findRetainerPaths(graph, "ChatModel", {
+  maxPaths: 5,
+  maxDepth: 25,
+  maxAttempts: 200,
+});
 ```
 
 ### 4. Write Investigation Scripts
@@ -123,6 +141,7 @@ node --max-old-space-size=16384 scratchpad/2026-04-09-chat-model-retainers/analy
 ### V8 Heap Snapshot Format
 
 The `.heapsnapshot` file is JSON with these key sections:
+
 - **`snapshot.meta`**: Field definitions for nodes and edges
 - **`nodes`**: Flat array, every N values = one node (N = `meta.node_fields.length`, typically 6: `type, name, id, self_size, edge_count, detachedness`)
 - **`edges`**: Flat array, every M values = one edge (M = `meta.edge_fields.length`, typically 3: `type, name_or_index, to_node`)
@@ -130,15 +149,15 @@ The `.heapsnapshot` file is JSON with these key sections:
 
 ### Edge Types That Matter
 
-| Type | Meaning | Prevents GC? |
-|------|---------|-------------|
-| `property` | Named JS property | Yes |
-| `element` | Array index | Yes |
-| `context` | Closure variable | Yes |
-| `internal` | V8 internal reference | Yes |
-| `hidden` | V8 hidden reference | Yes |
-| **`weak`** | WeakRef/WeakMap key | **No** |
-| `shortcut` | Convenience link | Depends |
+| Type       | Meaning               | Prevents GC? |
+| ---------- | --------------------- | ------------ |
+| `property` | Named JS property     | Yes          |
+| `element`  | Array index           | Yes          |
+| `context`  | Closure variable      | Yes          |
+| `internal` | V8 internal reference | Yes          |
+| `hidden`   | V8 hidden reference   | Yes          |
+| **`weak`** | WeakRef/WeakMap key   | **No**       |
+| `shortcut` | Convenience link      | Depends      |
 
 **Always skip `weak` edges when tracing retainer paths.** WeakMap entries show up as edges from key → backing array, but they don't prevent collection — they're red herrings.
 

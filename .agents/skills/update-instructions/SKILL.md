@@ -3,6 +3,7 @@ name: update-instructions
 description: update-instructions
 disable-model-invocation: true
 ---
+
 Read the changes introduced on the current branch, including BOTH:
 
 1. Uncommitted workspace modifications (staged and unstaged)

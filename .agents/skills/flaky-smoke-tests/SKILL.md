@@ -28,11 +28,11 @@ The pipeline builds VS Code from source and runs the complete Electron smoke sui
 
 Platform definitions and artifacts:
 
-| Platform | Job | Logs artifact | Crash artifact |
-|---|---|---|---|
-| macOS arm64 | `macOSSmokeFlaky` | `logs-macos-arm64-smoke-<attempt>` | `crash-dump-macos-arm64-smoke-<attempt>` |
+| Platform    | Job                 | Logs artifact                      | Crash artifact                           |
+| ----------- | ------------------- | ---------------------------------- | ---------------------------------------- |
+| macOS arm64 | `macOSSmokeFlaky`   | `logs-macos-arm64-smoke-<attempt>` | `crash-dump-macos-arm64-smoke-<attempt>` |
 | Windows x64 | `WindowsSmokeFlaky` | `logs-windows-x64-smoke-<attempt>` | `crash-dump-windows-x64-smoke-<attempt>` |
-| Linux x64 | `LinuxSmokeFlaky` | `logs-linux-x64-smoke-<attempt>` | `crash-dump-linux-x64-smoke-<attempt>` |
+| Linux x64   | `LinuxSmokeFlaky`   | `logs-linux-x64-smoke-<attempt>`   | `crash-dump-linux-x64-smoke-<attempt>`   |
 
 ## Prerequisites
 

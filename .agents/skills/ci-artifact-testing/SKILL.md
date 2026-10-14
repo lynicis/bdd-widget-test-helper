@@ -63,6 +63,7 @@ gh run download "$run_id" --repo "$repo" \
   ```
 
   If it is a merge build, record both its source SHA and the PR head. Do not describe it as an exact-head-only build. Stop or qualify the result when source provenance cannot be established.
+
 - Keep matching executables, native libraries, and required resources together from the same build. Replacing a launcher while retaining an old implementation library does not test the fix.
 - Archives may lose executable permissions or use staging filenames rather than installed names. Restore permissions only on identified executables, and reproduce the documented runtime layout. For example, a launcher expecting sibling `runtime.node` cannot load an artifact stored only under a platform-suffixed name; verify that contract before adding a local alias. Missing libraries are setup failures, not regression results.
 

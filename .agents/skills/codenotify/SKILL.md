@@ -3,6 +3,7 @@ name: codenotify
 description: codenotify
 disable-model-invocation: true
 ---
+
 # Add My Contributions to CODENOTIFY
 
 This prompt helps you add your code contributions to the `.github/CODENOTIFY` file based on git blame history.
@@ -17,6 +18,7 @@ This prompt helps you add your code contributions to the `.github/CODENOTIFY` fi
 ## What This Prompt Does
 
 This prompt will:
+
 1. Search through the repository's git blame history for files you've significantly contributed to
 2. Analyze which files and directories have your contributions
 3. **Follow the existing structure** in the `.github/CODENOTIFY` file, here are some examples:

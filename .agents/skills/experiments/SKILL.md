@@ -18,7 +18,7 @@ A triggered scorecard only compares users who reached the moment where control a
 
 ```ts
 logSettingExperimentTrigger(telemetryService, MY_SETTING_ID); // experiment-controlled setting
-logExperimentTrigger(telemetryService, 'myTreatment'); // treatment
+logExperimentTrigger(telemetryService, "myTreatment"); // treatment
 ```
 
 They log the shared `experimentTrigger` event with the treatment name as `treatmentName`, at most once per window or process, so they can run on every evaluation. Base the scorecard's trigger on that event (`monacoworkbench/experimentTrigger`) and its `treatmentName`. Don't add feature-specific trigger events.
@@ -37,22 +37,22 @@ Prefer no trigger over an approximate one. Dilution only costs statistical power
 
 Fire it where the code decides between control and treatment behavior, before they differ, under a condition that is the same in every arm.
 
-| The treatment… | Fire when… |
-|---|---|
-| changes what an action does | the action runs |
-| adds UI that control lacks | the UI would render, checked in every arm |
-| changes copy or an icon | that UI renders |
-| changes a delay | the countdown starts, not when the delayed UI shows |
+| The treatment…                            | Fire when…                                          |
+| ----------------------------------------- | --------------------------------------------------- |
+| changes what an action does               | the action runs                                     |
+| adds UI that control lacks                | the UI would render, checked in every arm           |
+| changes copy or an icon                   | that UI renders                                     |
+| changes a delay                           | the countdown starts, not when the delayed UI shows |
 | changes a default that users can override | the default is visible and no user choice is stored |
-| changes background behavior | the diverging code path runs |
+| changes background behavior               | the diverging code path runs                        |
 
 ```ts
 // Checking the setting first would only trigger the treatment arm.
 if (isBannerRelevant(context)) {
-	logSettingExperimentTrigger(telemetryService, MY_SETTING_ID);
-	if (configurationService.getValue<boolean>(MY_SETTING_ID)) {
-		showBanner();
-	}
+  logSettingExperimentTrigger(telemetryService, MY_SETTING_ID);
+  if (configurationService.getValue<boolean>(MY_SETTING_ID)) {
+    showBanner();
+  }
 }
 ```
 

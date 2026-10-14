@@ -33,8 +33,8 @@ The canonical export launches both Workbench and the Agents window with isolated
 
 Downstream consumers:
 
-| Consumer | Output |
-|---|---|
+| Consumer                                | Output                                                   |
+| --------------------------------------- | -------------------------------------------------------- |
 | `build/lib/policies/policyGenerator.ts` | Windows ADMX/ADML, macOS mobileconfig, Linux policy JSON |
-| `vscode-website` policy build | Enterprise policy reference |
-| `vscode-docs` | Generated enterprise policy documentation |
+| `vscode-website` policy build           | Enterprise policy reference                              |
+| `vscode-docs`                           | Generated enterprise policy documentation                |

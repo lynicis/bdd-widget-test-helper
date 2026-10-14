@@ -42,11 +42,13 @@ gh pr checks --json name,state,link,bucket --jq '.[] | select(.bucket == "fail")
 ```
 
 The `link` field contains the URL to the GitHub Actions job. Extract the **run ID** from the URL — it's the number after `/runs/`:
+
 ```
 https://github.com/microsoft/vscode/actions/runs/<RUN_ID>/job/<JOB_ID>
 ```
 
 If checks are still `IN_PROGRESS`, wait for them to complete before downloading logs:
+
 ```bash
 gh pr checks --watch --fail-fast
 ```
@@ -78,6 +80,7 @@ gh run view <RUN_ID> --job <JOB_ID> --log-failed
 > **Important**: `--log-failed` requires the **entire run** to complete, not just the failed job. If other jobs are still running, this command will block or error. Use **Option C** below to get logs for a completed job while the run is still in progress.
 
 The output can be large. Pipe through `tail` or `grep` to focus:
+
 ```bash
 # Last 100 lines of failed output
 gh run view <RUN_ID> --job <JOB_ID> --log-failed | tail -100
@@ -127,6 +130,7 @@ sed -n '34171,34371p' "$TMPDIR/ci-job-log.txt"
 ```
 
 If `##[error]` doesn't reveal enough, use broader patterns:
+
 ```bash
 # Find test failures, exceptions, and crash indicators
 grep -n -E 'HTTPError|ECONNRESET|ETIMEDOUT|502|exit code|Process completed|node:internal|triggerUncaughtException' "$TMPDIR/ci-job-log.txt" | head -20
@@ -137,6 +141,7 @@ grep -n -E 'HTTPError|ECONNRESET|ETIMEDOUT|502|exit code|Process completed|node:
 ### VS Code Log Artifacts Structure
 
 Downloaded log artifacts typically contain:
+
 ```
 logs-linux-x64-electron-1/
   main.log              # Main process log
@@ -148,6 +153,7 @@ logs-linux-x64-electron-1/
 ```
 
 Key files to examine first:
+
 - **Test assertion failures**: Check `exthost.log` for the extension host output and stack traces
 - **Terminal/sandbox issues**: Check `terminal.log` for rewriter pipeline, shell integration, and strategy logs
 - **Crash/hang**: Check `main.log` and look for crash dumps artifacts
@@ -159,12 +165,14 @@ Key files to examine first:
 ### For Test Failures
 
 Look for the test runner output in the failed step log:
+
 ```bash
 # Find failing test names and assertion messages
 gh run view <RUN_ID> --job <JOB_ID> --log-failed | grep -A 5 "failing\|AssertionError\|Expected\|Unexpected"
 ```
 
 Common patterns in VS Code CI:
+
 - **`AssertionError [ERR_ASSERTION]`**: Test assertion failed — check expected vs actual values
 - **`Extension host test runner exit code: 1`**: Integration test suite had failures
 - **`Command produced no output`**: Shell integration may not have captured command output (see terminal.log)
@@ -202,6 +210,7 @@ gh run list --branch main --workflow pr-linux-test.yml --limit 5 --json database
 Not all CI failures are caused by code changes. Common infrastructure failures:
 
 **Network / Registry issues**:
+
 - `npm ERR! network`, `ETIMEDOUT`, `ECONNRESET`, `EAI_AGAIN` — npm registry unreachable
 - `error: RPC failed; curl 56`, `fetch-pack: unexpected disconnect` — git network failure
 - `Error: unable to get local issuer certificate` — TLS/certificate issues
@@ -209,6 +218,7 @@ Not all CI failures are caused by code changes. Common infrastructure failures:
 - `HTTPError: Request failed with status code 502` on `electron/electron/releases` — Electron CDN download failure (common in the `node.js integration tests` step, which downloads Electron at runtime)
 
 **Machine / Environment issues**:
+
 - `No space left on device` — CI disk full
 - `ENOMEM`, `JavaScript heap out of memory` — CI machine ran out of memory
 - `The runner has received a shutdown signal` — CI preemption / timeout
@@ -216,11 +226,13 @@ Not all CI failures are caused by code changes. Common infrastructure failures:
 - `Xvfb failed to start` — display server for headless Linux tests failed
 
 **Test flakes** (not infrastructure, but not your fault either):
+
 - Timeouts on tests that normally pass — slow CI machine
 - Race conditions in async tests
 - Shell integration not reporting exit codes (see terminal.log for `exitCode: undefined`)
 
 **What to do with infrastructure failures**:
+
 1. **Don't change code** — the failure isn't caused by your PR
 2. **Re-run the failed jobs** via the GitHub UI or:
    ```bash
@@ -254,16 +266,16 @@ Not all CI failures are caused by code changes. Common infrastructure failures:
 
 ## Quick Reference
 
-| Task | Command |
-|------|---------|
-| Find PR for branch | `gh pr view --json number,url` |
-| List all checks | `gh pr checks --json name,state,bucket` |
-| List failed checks only | `gh pr checks --json name,state,link,bucket --jq '.[] \| select(.bucket == "fail")'` |
-| Watch checks until done | `gh pr checks --watch --fail-fast` |
-| Failed jobs in a run | `gh run view <RUN_ID> --json jobs --jq '.jobs[] \| select(.conclusion == "failure") \| {name, id: .databaseId}'` |
-| View failed step logs | `gh run view <RUN_ID> --job <JOB_ID> --log-failed` (requires full run to complete) |
+| Task                     | Command                                                                                                                |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| Find PR for branch       | `gh pr view --json number,url`                                                                                         |
+| List all checks          | `gh pr checks --json name,state,bucket`                                                                                |
+| List failed checks only  | `gh pr checks --json name,state,link,bucket --jq '.[] \| select(.bucket == "fail")'`                                   |
+| Watch checks until done  | `gh pr checks --watch --fail-fast`                                                                                     |
+| Failed jobs in a run     | `gh run view <RUN_ID> --json jobs --jq '.jobs[] \| select(.conclusion == "failure") \| {name, id: .databaseId}'`       |
+| View failed step logs    | `gh run view <RUN_ID> --job <JOB_ID> --log-failed` (requires full run to complete)                                     |
 | Download job log via API | `gh api repos/microsoft/vscode/actions/jobs/<JOB_ID>/logs > "$TMPDIR/ci-job-log.txt"` (works while run is in progress) |
-| Find error line in log | `grep -n '##\[error\]' "$TMPDIR/ci-job-log.txt"` |
-| Download log artifacts | `gh run download <RUN_ID> -n "<artifact-name>" -D /tmp/ci-logs` |
-| Re-run failed jobs | `gh run rerun <RUN_ID> --failed` |
-| Recent main runs | `gh run list --branch main --workflow <workflow>.yml --limit 5` |
+| Find error line in log   | `grep -n '##\[error\]' "$TMPDIR/ci-job-log.txt"`                                                                       |
+| Download log artifacts   | `gh run download <RUN_ID> -n "<artifact-name>" -D /tmp/ci-logs`                                                        |
+| Re-run failed jobs       | `gh run rerun <RUN_ID> --failed`                                                                                       |
+| Recent main runs         | `gh run list --branch main --workflow <workflow>.yml --limit 5`                                                        |

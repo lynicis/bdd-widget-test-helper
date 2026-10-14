@@ -1,6 +1,6 @@
 ---
 name: memory-leak-audit
-description: 'Audit code for memory leaks and disposable issues. Use when reviewing event listeners, DOM handlers, lifecycle callbacks, or fixing leak reports. Covers addDisposableListener, Event.once, MutableDisposable, DisposableStore, and onWillDispose patterns.'
+description: "Audit code for memory leaks and disposable issues. Use when reviewing event listeners, DOM handlers, lifecycle callbacks, or fixing leak reports. Covers addDisposableListener, Event.once, MutableDisposable, DisposableStore, and onWillDispose patterns."
 ---
 
 # Memory Leak Audit
@@ -117,31 +117,32 @@ createItem(): IDisposable & Item {
 **Rule**: Every test suite that creates disposable objects must call `ensureNoDisposablesAreLeakedInTestSuite()`.
 
 ```typescript
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../base/test/common/utils.js';
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../base/test/common/utils.js";
 
-suite('MyFeature', () => {
-    ensureNoDisposablesAreLeakedInTestSuite();
+suite("MyFeature", () => {
+  ensureNoDisposablesAreLeakedInTestSuite();
 
-    test('does something', () => {
-        // test disposables are tracked automatically
-    });
+  test("does something", () => {
+    // test disposables are tracked automatically
+  });
 });
 ```
 
 ## Quick Reference
 
-| Scenario | Pattern | Anti-Pattern |
-|----------|---------|-------------|
-| DOM events | `addDisposableListener()` | `.onclick =`, `addEventListener()` |
-| One-time events | `Event.once(event)(handler)` | `event(handler)` for lifecycle |
+| Scenario         | Pattern                                     | Anti-Pattern                          |
+| ---------------- | ------------------------------------------- | ------------------------------------- |
+| DOM events       | `addDisposableListener()`                   | `.onclick =`, `addEventListener()`    |
+| One-time events  | `Event.once(event)(handler)`                | `event(handler)` for lifecycle        |
 | Repeated methods | `MutableDisposable` or return `IDisposable` | `this._register()` in non-constructor |
-| Model lifecycle | `store.add(model.onWillDispose(...))` | Forgetting cleanup |
-| Pooled objects | Item-scoped `DisposableStore` | Pool-scoped `this._register()` |
-| Tests | `ensureNoDisposablesAreLeakedInTestSuite()` | No leak checking |
+| Model lifecycle  | `store.add(model.onWillDispose(...))`       | Forgetting cleanup                    |
+| Pooled objects   | Item-scoped `DisposableStore`               | Pool-scoped `this._register()`        |
+| Tests            | `ensureNoDisposablesAreLeakedInTestSuite()` | No leak checking                      |
 
 ## Verification
 
 After fixing leaks, verify by:
+
 1. Checking listener counts before/after repeated operations
 2. Running `ensureNoDisposablesAreLeakedInTestSuite()` in tests
 3. Confirming object counts stabilize (don't grow linearly with usage)

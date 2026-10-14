@@ -41,32 +41,32 @@ npm run perf:chat-leak -- --messages 20 --verbose
 
 Launches VS Code via Playwright Electron, opens the chat panel, sends a message with a mock LLM response, and measures timing, layout, and rendering metrics. By default, downloads VS Code 1.115.0 as a baseline, benchmarks it, then benchmarks the local dev build and compares.
 
-> **You don't always need a baseline.** A baseline exists only for *comparison* (regression detection). If you just want the current build's numbers — profiling a single change, capturing traces/heap snapshots, or iterating on a scenario — pass `--no-baseline` to skip downloading and benchmarking the baseline entirely (roughly halves runtime). Baseline comparison is what turns raw measurements into a pass/fail verdict; without it you still get all the metrics, just no verdict.
+> **You don't always need a baseline.** A baseline exists only for _comparison_ (regression detection). If you just want the current build's numbers — profiling a single change, capturing traces/heap snapshots, or iterating on a scenario — pass `--no-baseline` to skip downloading and benchmarking the baseline entirely (roughly halves runtime). Baseline comparison is what turns raw measurements into a pass/fail verdict; without it you still get all the metrics, just no verdict.
 
 ### Key flags
 
-| Flag | Default | Description |
-|---|---|---|
-| `--runs <n>` | `5` | Runs per scenario. More = more stable. Use 5+ for CI. |
-| `--scenario <id>` / `-s` | all | Scenario to test (repeatable). See `common/perf-scenarios.js`. |
-| `--build <path\|ver>` / `-b` | local dev | Build to test. Accepts path or version (`1.110.0`, `insiders`, commit hash). |
-| `--baseline <path>` | — | Compare against a previously saved baseline JSON file. |
-| `--baseline-build <path\|ver>` | `1.115.0` | Version or local path to benchmark as baseline. |
-| `--no-baseline` | — | Skip the baseline entirely — just measure the test build (no download, no comparison, ~2× faster). Use when you only need raw numbers, not a regression verdict. |
-| `--save-baseline` | — | Save results as the new baseline (requires `--baseline <path>`). |
-| `--resume <path>` | — | Resume a previous run, adding more iterations to increase confidence. |
-| `--threshold <frac>` | `0.2` | Regression threshold (0.2 = flag if 20% slower). |
-| `--production-build` | — | Build a local bundled package via `gulp vscode` for comparison against a release baseline. |
-| `--no-cache` | — | Ignore cached baseline data, always run fresh. |
-| `--force` | — | Skip build mode mismatch confirmation prompt. |
-| `--ci` | — | CI mode: write Markdown summary to `ci-summary.md` (implies `--no-cache`, `--heap-snapshots`, `--cleanup-diagnostics`). |
-| `--heap-snapshots` | — | Take heap snapshots after each run (slow; auto-enabled in `--ci` mode). |
-| `--gc-object-stats` | — | **GC deep-dives only.** Enables V8 `gc_stats` tracing (per-type heap object dump on every GC). ⚠️ Corrupts all timing metrics — a major GC landing mid-request adds ~550ms — so never use it for benchmarking. Off by default; prefer heap snapshots for memory analysis. |
-| `--cleanup-diagnostics` | — | Delete heap snapshots, CPU profiles, and traces to save disk. During runs, only the latest run's files are kept; after comparison, files for non-regressed scenarios are deleted. Auto-enabled in `--ci` mode. |
-| `--setting <k=v>` | — | Set a VS Code setting override for all builds (repeatable). |
-| `--test-setting <k=v>` | — | Set a VS Code setting override for the test build only. |
-| `--baseline-setting <k=v>` | — | Set a VS Code setting override for the baseline build only. |
-| `--verbose` | — | Print per-run details including response content. |
+| Flag                           | Default   | Description                                                                                                                                                                                                                                                               |
+| ------------------------------ | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--runs <n>`                   | `5`       | Runs per scenario. More = more stable. Use 5+ for CI.                                                                                                                                                                                                                     |
+| `--scenario <id>` / `-s`       | all       | Scenario to test (repeatable). See `common/perf-scenarios.js`.                                                                                                                                                                                                            |
+| `--build <path\|ver>` / `-b`   | local dev | Build to test. Accepts path or version (`1.110.0`, `insiders`, commit hash).                                                                                                                                                                                              |
+| `--baseline <path>`            | —         | Compare against a previously saved baseline JSON file.                                                                                                                                                                                                                    |
+| `--baseline-build <path\|ver>` | `1.115.0` | Version or local path to benchmark as baseline.                                                                                                                                                                                                                           |
+| `--no-baseline`                | —         | Skip the baseline entirely — just measure the test build (no download, no comparison, ~2× faster). Use when you only need raw numbers, not a regression verdict.                                                                                                          |
+| `--save-baseline`              | —         | Save results as the new baseline (requires `--baseline <path>`).                                                                                                                                                                                                          |
+| `--resume <path>`              | —         | Resume a previous run, adding more iterations to increase confidence.                                                                                                                                                                                                     |
+| `--threshold <frac>`           | `0.2`     | Regression threshold (0.2 = flag if 20% slower).                                                                                                                                                                                                                          |
+| `--production-build`           | —         | Build a local bundled package via `gulp vscode` for comparison against a release baseline.                                                                                                                                                                                |
+| `--no-cache`                   | —         | Ignore cached baseline data, always run fresh.                                                                                                                                                                                                                            |
+| `--force`                      | —         | Skip build mode mismatch confirmation prompt.                                                                                                                                                                                                                             |
+| `--ci`                         | —         | CI mode: write Markdown summary to `ci-summary.md` (implies `--no-cache`, `--heap-snapshots`, `--cleanup-diagnostics`).                                                                                                                                                   |
+| `--heap-snapshots`             | —         | Take heap snapshots after each run (slow; auto-enabled in `--ci` mode).                                                                                                                                                                                                   |
+| `--gc-object-stats`            | —         | **GC deep-dives only.** Enables V8 `gc_stats` tracing (per-type heap object dump on every GC). ⚠️ Corrupts all timing metrics — a major GC landing mid-request adds ~550ms — so never use it for benchmarking. Off by default; prefer heap snapshots for memory analysis. |
+| `--cleanup-diagnostics`        | —         | Delete heap snapshots, CPU profiles, and traces to save disk. During runs, only the latest run's files are kept; after comparison, files for non-regressed scenarios are deleted. Auto-enabled in `--ci` mode.                                                            |
+| `--setting <k=v>`              | —         | Set a VS Code setting override for all builds (repeatable).                                                                                                                                                                                                               |
+| `--test-setting <k=v>`         | —         | Set a VS Code setting override for the test build only.                                                                                                                                                                                                                   |
+| `--baseline-setting <k=v>`     | —         | Set a VS Code setting override for the baseline build only.                                                                                                                                                                                                               |
+| `--verbose`                    | —         | Print per-run details including response content.                                                                                                                                                                                                                         |
 
 ### Comparing two remote builds
 
@@ -99,11 +99,11 @@ Local path baselines are never cached (the build may change between runs). Versi
 
 The tool classifies builds into three modes based on the executable path:
 
-| Mode | Source | Characteristics |
-|---|---|---|
-| `dev` | `.build/electron/` (local dev) | Unbundled sources, `VSCODE_DEV=1`, `NODE_ENV=development`. Higher memory and startup overhead. |
-| `production` | `../VSCode-<platform>-<arch>/` (from `gulp vscode`) | Bundled JS, no dev flags. Matches release characteristics but uses local source. |
-| `release` | `.vscode-test/` (downloaded via `@vscode/test-electron`) | Official published build. |
+| Mode         | Source                                                   | Characteristics                                                                                |
+| ------------ | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `dev`        | `.build/electron/` (local dev)                           | Unbundled sources, `VSCODE_DEV=1`, `NODE_ENV=development`. Higher memory and startup overhead. |
+| `production` | `../VSCode-<platform>-<arch>/` (from `gulp vscode`)      | Bundled JS, no dev flags. Matches release characteristics but uses local source.               |
+| `release`    | `.vscode-test/` (downloaded via `@vscode/test-electron`) | Official published build.                                                                      |
 
 When test and baseline builds have different modes (e.g. dev vs release), the tool shows a warning and prompts for confirmation. Use `--force` or `--ci` to skip the prompt.
 
@@ -157,6 +157,7 @@ npm run perf:chat -- --resume .chat-simulation-data/2026-04-14T02-15-14/results.
 Regression detection uses **Welch's t-test** to avoid false positives from noisy measurements. A metric is only flagged as `REGRESSION` when it both exceeds the threshold AND is statistically significant (p < 0.05). Otherwise it's reported as `(likely noise — p=X, not significant)`.
 
 With typical variance (cv ≈ 20%), you need:
+
 - **n ≥ 5** per build to detect a 35% regression at 95% confidence
 - **n ≥ 10** per build to detect a 20% regression reliably
 
@@ -187,14 +188,16 @@ Run `npm run perf:chat -- --help` to see the full list of registered scenario ID
 ### Regression triggers vs informational metrics
 
 Only these metrics trigger a regression failure (when they exceed the threshold with statistical significance):
+
 - `timeToFirstToken`, `timeToComplete` — user-perceived latency
-- `layoutDurationMs` — total layout time from the trace (the *real* layout cost)
+- `layoutDurationMs` — total layout time from the trace (the _real_ layout cost)
 - `forcedReflowCount` — forced synchronous layouts are always bad
 - `longTaskCount` — main thread jank
 
 These are reported but **informational only** (won't fail CI):
+
 - `longAnimationFrameCount` — number of long animation frames; noisy and compositor-driven, so tracked for signal but does not gate. Real jank is gated via `longTaskCount` / `layoutDurationMs`.
-- `layoutCount` — number of layout ops; inflated by CSS animations (compositor-driven, cheap). A build can do *more but cheaper* layouts, so gate on `layoutDurationMs`, not this count.
+- `layoutCount` — number of layout ops; inflated by CSS animations (compositor-driven, cheap). A build can do _more but cheaper_ layouts, so gate on `layoutDurationMs`, not this count.
 - `recalcStyleCount` — number of style recalcs; inflated by CSS animations (compositor-driven, cheap)
 - `timeToRenderComplete` — includes typewriter animation tail
 - Memory/heap metrics — too noisy for single-request benchmarks
@@ -211,13 +214,13 @@ Launches one VS Code session, sends N messages sequentially, forces GC between e
 
 ### Key flags
 
-| Flag | Default | Description |
-|---|---|---|
-| `--messages <n>` / `-n` | `10` | Number of messages to send. More = more accurate slope. |
-| `--build <path\|ver>` / `-b` | local dev | Build to test. |
-| `--threshold <MB>` | `2` | Max per-message heap growth in MB. |
-| `--setting <k=v>` | — | Set a VS Code setting override (repeatable). |
-| `--verbose` | — | Print per-message heap/DOM counts. |
+| Flag                         | Default   | Description                                             |
+| ---------------------------- | --------- | ------------------------------------------------------- |
+| `--messages <n>` / `-n`      | `10`      | Number of messages to send. More = more accurate slope. |
+| `--build <path\|ver>` / `-b` | local dev | Build to test.                                          |
+| `--threshold <MB>`           | `2`       | Max per-message heap growth in MB.                      |
+| `--setting <k=v>`            | —         | Set a VS Code setting override (repeatable).            |
+| `--verbose`                  | —         | Print per-message heap/DOM counts.                      |
 
 ### What it measures
 
@@ -233,7 +236,7 @@ Launches one VS Code session, sends N messages sequentially, forces GC between e
 
 ## CI runs & pinpointing regressions
 
-The perf + leak checks run in CI via the **`.github/workflows/chat-perf.yml`** workflow (a scheduled daily `workflow_dispatch`, plus manual dispatch). Each run benchmarks the current `main` as the **test** build against a fixed release **baseline** (from `config.jsonc`, e.g. `1.122.0`). Because the baseline is fixed, the **test** median for a metric across successive daily runs traces `main`'s trajectory over time — that's what lets you bisect *when* something regressed or went flaky.
+The perf + leak checks run in CI via the **`.github/workflows/chat-perf.yml`** workflow (a scheduled daily `workflow_dispatch`, plus manual dispatch). Each run benchmarks the current `main` as the **test** build against a fixed release **baseline** (from `config.jsonc`, e.g. `1.122.0`). Because the baseline is fixed, the **test** median for a metric across successive daily runs traces `main`'s trajectory over time — that's what lets you bisect _when_ something regressed or went flaky.
 
 ### Finding and reading historic runs
 
@@ -254,12 +257,12 @@ gh workflow run chat-perf.yml -R microsoft/vscode --ref main \
 
 ### Artifacts per run (and retention — this matters for old runs)
 
-| Artifact | Contents | Retention |
-|---|---|---|
-| `chat-perf-summary` | Unified `ci-summary.md`: verdicts, per-metric medians ±stddev, **per-run raw tables** | 30 days |
-| `perf-results-<group>` | Everything below **plus traces, CPU profiles, heap snapshots** (large) | 30 days |
-| `leak-results` | Leak log + `chat-simulation-leak-results.json` | 30 days |
-| `perf-summary-<group>` | `results.json` (full per-run metrics incl. `rawRuns`) + `baseline-*.json` | **1 day** |
+| Artifact               | Contents                                                                              | Retention |
+| ---------------------- | ------------------------------------------------------------------------------------- | --------- |
+| `chat-perf-summary`    | Unified `ci-summary.md`: verdicts, per-metric medians ±stddev, **per-run raw tables** | 30 days   |
+| `perf-results-<group>` | Everything below **plus traces, CPU profiles, heap snapshots** (large)                | 30 days   |
+| `leak-results`         | Leak log + `chat-simulation-leak-results.json`                                        | 30 days   |
+| `perf-summary-<group>` | `results.json` (full per-run metrics incl. `rawRuns`) + `baseline-*.json`             | **1 day** |
 
 ```bash
 # List a run's artifacts + whether they've expired
@@ -272,8 +275,8 @@ gh run download <run-id> -R microsoft/vscode -n chat-perf-summary
 
 ### Pinpointing where a metric regressed / went flaky
 
-1. **Bisect across dates.** Pull `chat-perf-summary/ci-summary.md` from several runs spanning the window. Compare the **test** median (and ±stddev) for the suspect metric+scenario run-to-run — the day it jumps is when `main` changed. A metric that goes *bimodal* (e.g. a raw-run column showing two clusters like `~250 / ~900`) is the flaky signature; a stable shift is a genuine regression.
-2. **Confirm it's real vs. measurement noise.** Check the per-run raw tables (in `ci-summary.md`) — high ±stddev / bimodal values mean the *median* is being pulled around by a few outlier runs, not a uniform slowdown.
+1. **Bisect across dates.** Pull `chat-perf-summary/ci-summary.md` from several runs spanning the window. Compare the **test** median (and ±stddev) for the suspect metric+scenario run-to-run — the day it jumps is when `main` changed. A metric that goes _bimodal_ (e.g. a raw-run column showing two clusters like `~250 / ~900`) is the flaky signature; a stable shift is a genuine regression.
+2. **Confirm it's real vs. measurement noise.** Check the per-run raw tables (in `ci-summary.md`) — high ±stddev / bimodal values mean the _median_ is being pulled around by a few outlier runs, not a uniform slowdown.
 3. **Deep-dive the cause.** Download `perf-results-<group>` (has the `trace.json` per run) for a slow run and inspect what dominates the slow window. Trick that found the `gc_stats` artifact: sum main-thread `RunTask` durations between two `code/chat/*` marks (e.g. `willCollectInstructions` → `didCollectInstructions`) — if the window is ~0% busy, it's an async wait or a GC pause, not real work; then look at the largest `X`-phase events in that window (`MajorGC`, `Layout`, etc.).
 4. **Reproduce a suspect commit locally** to bisect precisely: `npm run perf:chat -- --build <sha> --baseline-build <ver> --runs 7` (or two commits directly via `--build <shaA> --baseline-build <shaB>`).
 

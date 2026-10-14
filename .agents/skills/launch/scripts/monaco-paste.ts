@@ -4,118 +4,146 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { spawnSync, type SpawnSyncReturns } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
-import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { spawnSync, type SpawnSyncReturns } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
-const focusChatScript = join(scriptDirectory, '..', 'playwrightScripts', 'focus-chat-input.ts');
+const focusChatScript = join(
+  scriptDirectory,
+  "..",
+  "playwrightScripts",
+  "focus-chat-input.ts",
+);
 const require = createRequire(import.meta.url);
 let playwrightCli: string | undefined;
 
 let append = false;
 let verify = true;
-let session = process.env.PW_SESSION ?? '';
+let session = process.env.PW_SESSION ?? "";
 let text: string | undefined;
 
 function fail(message: string, exitCode = 1, details?: string): never {
-	process.stdout.write(`${JSON.stringify({ ok: false, error: message })}\n`);
-	if (details) {
-		process.stderr.write(details);
-	}
-	process.exit(exitCode);
+  process.stdout.write(`${JSON.stringify({ ok: false, error: message })}\n`);
+  if (details) {
+    process.stderr.write(details);
+  }
+  process.exit(exitCode);
 }
 
 function getErrorMessage(error: unknown): string {
-	return error instanceof Error ? error.message : String(error);
+  return error instanceof Error ? error.message : String(error);
 }
 
 for (let index = 2; index < process.argv.length; index++) {
-	const argument = process.argv[index];
-	switch (argument) {
-		case '--append':
-			append = true;
-			break;
-		case '--no-verify':
-			verify = false;
-			break;
-		case '--session':
-			if (index + 1 >= process.argv.length) {
-				fail('missing value for --session', 2);
-			}
-			session = process.argv[++index];
-			break;
-		case '--': {
-			const remainingArguments = process.argv.slice(index + 1);
-			if (remainingArguments.length > 0) {
-				text = remainingArguments.join(' ');
-			}
-			index = process.argv.length;
-			break;
-		}
-		case '--help':
-		case '-h':
-			process.stdout.write(`Usage: monaco-paste.ts [--append] [--no-verify] [--session NAME] [text]
+  const argument = process.argv[index];
+  switch (argument) {
+    case "--append":
+      append = true;
+      break;
+    case "--no-verify":
+      verify = false;
+      break;
+    case "--session":
+      if (index + 1 >= process.argv.length) {
+        fail("missing value for --session", 2);
+      }
+      session = process.argv[++index];
+      break;
+    case "--": {
+      const remainingArguments = process.argv.slice(index + 1);
+      if (remainingArguments.length > 0) {
+        text = remainingArguments.join(" ");
+      }
+      index = process.argv.length;
+      break;
+    }
+    case "--help":
+    case "-h":
+      process.stdout
+        .write(`Usage: monaco-paste.ts [--append] [--no-verify] [--session NAME] [text]
 
 Pastes text into the focused Code OSS Chat input through an attached
 @playwright/cli session. If text is omitted, it is read from stdin.
 `);
-			process.exit(0);
-		default:
-			if (argument.startsWith('--session=')) {
-				session = argument.slice('--session='.length);
-			} else if (argument.startsWith('-')) {
-				fail(`unknown flag ${argument}`, 2);
-			} else if (text === undefined) {
-				text = argument;
-			} else {
-				fail('only one text argument is supported; use stdin for arbitrary text', 2);
-			}
-	}
+      process.exit(0);
+    default:
+      if (argument.startsWith("--session=")) {
+        session = argument.slice("--session=".length);
+      } else if (argument.startsWith("-")) {
+        fail(`unknown flag ${argument}`, 2);
+      } else if (text === undefined) {
+        text = argument;
+      } else {
+        fail(
+          "only one text argument is supported; use stdin for arbitrary text",
+          2,
+        );
+      }
+  }
 }
 
 if (text === undefined) {
-	text = readFileSync(0, 'utf8');
+  text = readFileSync(0, "utf8");
 }
 if (!text) {
-	fail('empty input', 2);
+  fail("empty input", 2);
 }
 
 const sessionArguments = session ? [`-s=${session}`] : [];
 function runCli(args: readonly string[]): SpawnSyncReturns<string> {
-	try {
-		playwrightCli ??= require.resolve('@playwright/cli/playwright-cli.js');
-	} catch (error) {
-		fail(`could not resolve @playwright/cli from the launch skill: ${getErrorMessage(error)}`, 1);
-	}
-	const result = spawnSync(process.execPath, [playwrightCli, ...sessionArguments, ...args], {
-		encoding: 'utf8',
-		windowsHide: true,
-	});
-	if (result.error) {
-		fail(`failed to run @playwright/cli: ${result.error.message}`, 1);
-	}
-	return result;
+  try {
+    playwrightCli ??= require.resolve("@playwright/cli/playwright-cli.js");
+  } catch (error) {
+    fail(
+      `could not resolve @playwright/cli from the launch skill: ${getErrorMessage(error)}`,
+      1,
+    );
+  }
+  const result = spawnSync(
+    process.execPath,
+    [playwrightCli, ...sessionArguments, ...args],
+    {
+      encoding: "utf8",
+      windowsHide: true,
+    },
+  );
+  if (result.error) {
+    fail(`failed to run @playwright/cli: ${result.error.message}`, 1);
+  }
+  return result;
 }
 
-const focusResult = runCli(['run-code', `--filename=${focusChatScript}`]);
+const focusResult = runCli(["run-code", `--filename=${focusChatScript}`]);
 if (focusResult.status !== 0) {
-	fail('failed to focus a visible chat input', 1, focusResult.stderr || focusResult.stdout);
+  fail(
+    "failed to focus a visible chat input",
+    1,
+    focusResult.stderr || focusResult.stdout,
+  );
 }
 
 if (!append) {
-	const selectAllModifier = process.platform === 'darwin' ? 'Meta' : 'Control';
-	const selectAllResult = runCli(['press', `${selectAllModifier}+a`]);
-	if (selectAllResult.status !== 0) {
-		fail('failed to select existing chat input', 1, selectAllResult.stderr || selectAllResult.stdout);
-	}
-	const deleteResult = runCli(['press', 'Backspace']);
-	if (deleteResult.status !== 0) {
-		fail('failed to clear existing chat input', 1, deleteResult.stderr || deleteResult.stdout);
-	}
+  const selectAllModifier = process.platform === "darwin" ? "Meta" : "Control";
+  const selectAllResult = runCli(["press", `${selectAllModifier}+a`]);
+  if (selectAllResult.status !== 0) {
+    fail(
+      "failed to select existing chat input",
+      1,
+      selectAllResult.stderr || selectAllResult.stdout,
+    );
+  }
+  const deleteResult = runCli(["press", "Backspace"]);
+  if (deleteResult.status !== 0) {
+    fail(
+      "failed to clear existing chat input",
+      1,
+      deleteResult.stderr || deleteResult.stdout,
+    );
+  }
 }
 
 const code = `async page => page.evaluate(async ({ text, verify }) => {
@@ -182,38 +210,55 @@ const code = `async page => page.evaluate(async ({ text, verify }) => {
 	};
 }, { text: ${JSON.stringify(text)}, verify: ${verify} })`;
 
-const temporaryDirectory = mkdtempSync(join(tmpdir(), 'code-oss-monaco-paste-'));
-const codeFile = join(temporaryDirectory, 'paste.js');
+const temporaryDirectory = mkdtempSync(
+  join(tmpdir(), "code-oss-monaco-paste-"),
+);
+const codeFile = join(temporaryDirectory, "paste.js");
 const pasteResult = (() => {
-	try {
-		writeFileSync(codeFile, code);
-		return runCli(['run-code', `--filename=${codeFile}`]);
-	} finally {
-		rmSync(temporaryDirectory, { recursive: true, force: true });
-	}
+  try {
+    writeFileSync(codeFile, code);
+    return runCli(["run-code", `--filename=${codeFile}`]);
+  } finally {
+    rmSync(temporaryDirectory, { recursive: true, force: true });
+  }
 })();
 if (pasteResult.status !== 0) {
-	fail('@playwright/cli run-code failed', 1, pasteResult.stderr || pasteResult.stdout);
+  fail(
+    "@playwright/cli run-code failed",
+    1,
+    pasteResult.stderr || pasteResult.stdout,
+  );
 }
 
 const resultMatch = pasteResult.stdout.match(/### Result\r?\n([^\r\n]+)/);
 if (!resultMatch) {
-	fail('no ### Result section in run-code output', 1, pasteResult.stdout);
+  fail("no ### Result section in run-code output", 1, pasteResult.stdout);
 }
 
 let result: unknown;
 try {
-	result = JSON.parse(resultMatch[1]);
-	if (typeof result === 'string') {
-		result = JSON.parse(result);
-	}
+  result = JSON.parse(resultMatch[1]);
+  if (typeof result === "string") {
+    result = JSON.parse(result);
+  }
 } catch (error) {
-	fail(`failed to parse result line: ${getErrorMessage(error)}`, 1, pasteResult.stdout);
+  fail(
+    `failed to parse result line: ${getErrorMessage(error)}`,
+    1,
+    pasteResult.stdout,
+  );
 }
 
-const ok = result && typeof result === 'object' ? Object.getOwnPropertyDescriptor(result, 'ok')?.value : undefined;
-if (typeof ok !== 'boolean') {
-	fail('run-code result did not contain a boolean ok property', 1, pasteResult.stdout);
+const ok =
+  result && typeof result === "object"
+    ? Object.getOwnPropertyDescriptor(result, "ok")?.value
+    : undefined;
+if (typeof ok !== "boolean") {
+  fail(
+    "run-code result did not contain a boolean ok property",
+    1,
+    pasteResult.stdout,
+  );
 }
 
 process.stdout.write(`${JSON.stringify(result)}\n`);

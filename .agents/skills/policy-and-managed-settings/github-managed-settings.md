@@ -19,8 +19,8 @@ export type ManagedSettingsData = Readonly<Record<string, ManagedSettingValue>>;
 
 ```ts
 export interface IPolicyData {
-    // ...
-    readonly managedSettings?: ManagedSettingsData;
+  // ...
+  readonly managedSettings?: ManagedSettingsData;
 }
 ```
 
@@ -30,15 +30,15 @@ Keys are **flat dot-paths**. Scalar leaves flatten directly. Structured values (
 
 VS Code implements **three** channels feeding the bag, matching the external schema's described delivery slots (native MDM, server-managed, and file-based).
 
-| Channel | Where it's read | Implementation | Lands on |
-|---------|-----------------|----------------|----------|
-| **Native MDM** (Windows registry / macOS plist) | OS managed preferences | `NativeManagedSettingsService` (`src/vs/platform/policy/node/nativeManagedSettingsService.ts`) via `@vscode/policy-watcher` | `INativeManagedSettingsService.managedSettings` |
-| **Server-managed** (`/copilot_internal/managed_settings`) | GitHub endpoint; per the code comment in `managedSettings.ts`, it returns the enterprise's `.github/copilot/settings.json` content | `adaptManagedSettings` (`src/vs/workbench/services/accounts/browser/managedSettings.ts`) → `DefaultAccountService.policyData` | `accountPolicyData.managedSettings` |
-| **File-based** (`managed-settings.json`) | well-known per-OS disk path (e.g. `/Library/Application Support/GitHubCopilot/` on macOS), read in the main process and exposed to renderer windows over IPC | `FileManagedSettingsService` (`src/vs/platform/policy/common/fileManagedSettingsService.ts`) | `IFileManagedSettingsService.rawManagedSettings` + `.managedSettings` |
+| Channel                                                   | Where it's read                                                                                                                                              | Implementation                                                                                                                | Lands on                                                              |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| **Native MDM** (Windows registry / macOS plist)           | OS managed preferences                                                                                                                                       | `NativeManagedSettingsService` (`src/vs/platform/policy/node/nativeManagedSettingsService.ts`) via `@vscode/policy-watcher`   | `INativeManagedSettingsService.managedSettings`                       |
+| **Server-managed** (`/copilot_internal/managed_settings`) | GitHub endpoint; per the code comment in `managedSettings.ts`, it returns the enterprise's `.github/copilot/settings.json` content                           | `adaptManagedSettings` (`src/vs/workbench/services/accounts/browser/managedSettings.ts`) → `DefaultAccountService.policyData` | `accountPolicyData.managedSettings`                                   |
+| **File-based** (`managed-settings.json`)                  | well-known per-OS disk path (e.g. `/Library/Application Support/GitHubCopilot/` on macOS), read in the main process and exposed to renderer windows over IPC | `FileManagedSettingsService` (`src/vs/platform/policy/common/fileManagedSettingsService.ts`)                                  | `IFileManagedSettingsService.rawManagedSettings` + `.managedSettings` |
 
 All three VS Code channels converge in `AccountPolicyService.getPolicyData()`.
 
-**Precedence: native MDM managed settings win over the server-delivered channel, which in turn wins over the file-based channel** (`pickManagedSettings` in `copilotManagedSettings.ts`). Precedence is resolved **per key**: for each key the highest-precedence channel that supplies it wins, but a key that the higher channels leave unset is still filled in by a lower channel. A value an admin locks via native MDM therefore cannot be overwritten by the server or a file, while keys the higher channels never set remain available to lower ones. Rationale for the order: the server is harder to bypass than local MDM, and a local file is the most easily tampered with. The merged bag is then projected onto the declared schema (see below). Client-side merging still happens *within* a channel's value (e.g. `enabledPlugins`, `extraKnownMarketplaces`).
+**Precedence: native MDM managed settings win over the server-delivered channel, which in turn wins over the file-based channel** (`pickManagedSettings` in `copilotManagedSettings.ts`). Precedence is resolved **per key**: for each key the highest-precedence channel that supplies it wins, but a key that the higher channels leave unset is still filled in by a lower channel. A value an admin locks via native MDM therefore cannot be overwritten by the server or a file, while keys the higher channels never set remain available to lower ones. Rationale for the order: the server is harder to bypass than local MDM, and a local file is the most easily tampered with. The merged bag is then projected onto the declared schema (see below). Client-side merging still happens _within_ a channel's value (e.g. `enabledPlugins`, `extraKnownMarketplaces`).
 
 **Sandbox presentation exceptions:** `sandbox.enabled` follows the runtime's `force-on-wins` contract: `true` from any managed channel wins over `false` from another channel. `sandbox.allowBypass` and `sandbox.userPolicy.network.allowOutbound` are `deny-wins`: `false` from any managed channel wins. The shared resolver supplies these results to UI consumers and Policy Diagnostics; runtime enforcement remains authoritative. Other keys retain their existing delivery-channel precedence.
 
@@ -52,24 +52,25 @@ When the developer has `copilot-agent-runtime` checked out side-by-side, referen
 
 The schema is **nested**, whereas the VS Code bag is **flattened** to dot-paths — e.g. the schema's nested `permissions.disableBypassPermissionsMode` becomes the flat bag key of the same name (the `COPILOT_DISABLE_BYPASS_PERMISSIONS_MODE_KEY` constant):
 
-| Schema property (path) | Type in schema | Composition (`x-composition.strategy`) |
-|------------------------|----------------|----------------------------------------|
-| `permissions.disableBypassPermissionsMode` | string enum `"disable"` \| `"allow-auto-only"` | most-restrictive-wins (sticky once set) |
-| `model` | string (`auto`, a model family name, or a full model id) | — |
-| `permissions.model` | string (legacy location for `model`) | — |
-| `forceRemoteSettingsRefresh` | boolean | MDM wins; controls the server cache rather than a configuration setting |
-| `enabledPlugins` | `{ "PLUGIN@MARKETPLACE": boolean }` | deny-wins (false beats true; enterprise denials immutable) |
-| `extraKnownMarketplaces` | `{ name: { source, autoUpdate? } }`, source `github` \| `git` \| `directory` | most-restrictive-wins (higher layer is the complete allowlist); explicit `autoUpdate` overrides the client's global plugin auto-update setting for that marketplace |
-| `strictKnownMarketplaces` | array of source descriptors | most-restrictive-wins (empty array = lockdown) |
+| Schema property (path)                     | Type in schema                                                               | Composition (`x-composition.strategy`)                                                                                                                              |
+| ------------------------------------------ | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `permissions.disableBypassPermissionsMode` | string enum `"disable"` \| `"allow-auto-only"`                               | most-restrictive-wins (sticky once set)                                                                                                                             |
+| `model`                                    | string (`auto`, a model family name, or a full model id)                     | —                                                                                                                                                                   |
+| `permissions.model`                        | string (legacy location for `model`)                                         | —                                                                                                                                                                   |
+| `forceRemoteSettingsRefresh`               | boolean                                                                      | MDM wins; controls the server cache rather than a configuration setting                                                                                             |
+| `enabledPlugins`                           | `{ "PLUGIN@MARKETPLACE": boolean }`                                          | deny-wins (false beats true; enterprise denials immutable)                                                                                                          |
+| `extraKnownMarketplaces`                   | `{ name: { source, autoUpdate? } }`, source `github` \| `git` \| `directory` | most-restrictive-wins (higher layer is the complete allowlist); explicit `autoUpdate` overrides the client's global plugin auto-update setting for that marketplace |
+| `strictKnownMarketplaces`                  | array of source descriptors                                                  | most-restrictive-wins (empty array = lockdown)                                                                                                                      |
 
 > **Current schema ↔ runtime divergence** (treat `managed-settings-schema.json` as the API source of truth, and keep the VS Code `managedSettings` declarations aligned with what the server actually projects into the bag):
+>
 > - `extraKnownMarketplaces`: the schema permits source kinds `github` / `git` / `directory`, but the VS Code normalizer only accepts `github` and `git` — `directory` (and any other kind) is dropped with a warning (`managedSettings.ts` `normalizeExtraKnownMarketplaces`; `IExtraKnownMarketplaceEntry` in `base/common/managedSettings.ts` only types `github`/`git`).
 >
-> Note every **structured** key — `enabledPlugins`, `extraKnownMarketplaces`, `strictKnownMarketplaces` — is declared on its policy as **`{ type: 'string' }`**: the object/array value is carried as a JSON string in the bag and parsed back on read (see [Structured settings](#structured-objectarray-settings)). The *setting's* own `type` is the real shape — e.g. `chat.plugins.strictMarketplaces` is `['array', 'null']`, modeling the schema's array allowlist; only the bag-carrying type is `'string'`. That `'string'` is **required, not cosmetic**: `type` is a required field whose only allowed values are `'string' | 'number' | 'boolean'`, so omitting it or declaring `'object'` / `'array'` is a *compile* error; declaring `'number'` / `'boolean'` compiles but then fails projection validation at *runtime* (the JSON-string bag value flunks `typeof value === type`), so the key is dropped and silently never applies.
+> Note every **structured** key — `enabledPlugins`, `extraKnownMarketplaces`, `strictKnownMarketplaces` — is declared on its policy as **`{ type: 'string' }`**: the object/array value is carried as a JSON string in the bag and parsed back on read (see [Structured settings](#structured-objectarray-settings)). The _setting's_ own `type` is the real shape — e.g. `chat.plugins.strictMarketplaces` is `['array', 'null']`, modeling the schema's array allowlist; only the bag-carrying type is `'string'`. That `'string'` is **required, not cosmetic**: `type` is a required field whose only allowed values are `'string' | 'number' | 'boolean'`, so omitting it or declaring `'object'` / `'array'` is a _compile_ error; declaring `'number'` / `'boolean'` compiles but then fails projection validation at _runtime_ (the JSON-string bag value flunks `typeof value === type`), so the key is dropped and silently never applies.
 
 Note the schema's `x-composition` describes the **server/runtime** layering across enterprise/org/user. Inside VS Code the bag has already been collapsed to a single projected `ManagedSettingsData` before a `policy.value()` callback ever sees it.
 
-> **Multi-key precedence (`model`).** The channel merge in `pickManagedSettings` only resolves the *same* key across delivery channels; it does not know that top-level `model` supersedes the legacy nested `permissions.model`. That cross-key precedence is resolved in the policy's `value()` callback (`managedModelValue` in `copilotManagedSettings.ts`), which reads the top-level key first and falls back to the legacy key (treating a blank value as unset). Because it is key-level, a non-empty top-level `model` wins even when `permissions.model` was supplied by a higher-precedence channel. The `ChatDefaultModel` policy declares **both** keys in its `managedSettings` so native MDM watches each and projection keeps them.
+> **Multi-key precedence (`model`).** The channel merge in `pickManagedSettings` only resolves the _same_ key across delivery channels; it does not know that top-level `model` supersedes the legacy nested `permissions.model`. That cross-key precedence is resolved in the policy's `value()` callback (`managedModelValue` in `copilotManagedSettings.ts`), which reads the top-level key first and falls back to the legacy key (treating a blank value as unset). Because it is key-level, a non-empty top-level `model` wins even when `permissions.model` was supplied by a higher-precedence channel. The `ChatDefaultModel` policy declares **both** keys in its `managedSettings` so native MDM watches each and projection keeps them.
 
 ## Declaring a managed setting on a policy
 
@@ -120,7 +121,7 @@ Existing policies that combine the managed value with historical conditions (lik
 
 ### Structured (object/array) settings
 
-For settings whose `type` is `'object'` or `'array'`, the policy still declares the managed-settings key as a **string** (the JSON is carried as a string), and the `value` callback returns that raw string. The `{ type: 'string' }` is **mandatory and must be `'string'`** for these keys, not filler: `projectManagedSettings` keeps a bag value only when `typeof value === type`, and the native MDM watcher reads the registry/plist value as that type. `type` is a required field whose only allowed values are `'string' | 'number' | 'boolean'` (`IManagedSettingPolicyDefinition` in `base/common/policy.ts`), so omitting it or declaring `'object'` / `'array'` is a *compile* error. Declaring `'number'` / `'boolean'` compiles, but because the structured value travels as a JSON string it then flunks that `typeof` check at *runtime* and gets dropped, so the managed setting silently never applies. When the policy value is a string but the setting's type is not, `PolicyConfiguration` parses it back into the typed value on read via its own lenient JSONC parser (`PolicyConfiguration.parse()` using a `json.visit` streaming visitor — *not* `JSON.parse`; see `configurations.ts`). Examples in `chat.shared.contribution.ts`:
+For settings whose `type` is `'object'` or `'array'`, the policy still declares the managed-settings key as a **string** (the JSON is carried as a string), and the `value` callback returns that raw string. The `{ type: 'string' }` is **mandatory and must be `'string'`** for these keys, not filler: `projectManagedSettings` keeps a bag value only when `typeof value === type`, and the native MDM watcher reads the registry/plist value as that type. `type` is a required field whose only allowed values are `'string' | 'number' | 'boolean'` (`IManagedSettingPolicyDefinition` in `base/common/policy.ts`), so omitting it or declaring `'object'` / `'array'` is a _compile_ error. Declaring `'number'` / `'boolean'` compiles, but because the structured value travels as a JSON string it then flunks that `typeof` check at _runtime_ and gets dropped, so the managed setting silently never applies. When the policy value is a string but the setting's type is not, `PolicyConfiguration` parses it back into the typed value on read via its own lenient JSONC parser (`PolicyConfiguration.parse()` using a `json.visit` streaming visitor — _not_ `JSON.parse`; see `configurations.ts`). Examples in `chat.shared.contribution.ts`:
 
 ```ts
 // chat.plugins.enabledPlugins — setting type: 'object'; managed key carried as a string
@@ -132,17 +133,17 @@ managedSettings: { [COPILOT_ENABLED_PLUGINS_KEY]: { type: 'string' } },
 
 ## How the pieces fit (helpers in `copilotManagedSettings.ts`)
 
-| Function | Role |
-|----------|------|
-| `flattenManagedSettings(obj)` | Flattens a nested response into dot-path scalars (used by `normalizeManagedSettings`). |
-| `normalizeManagedSettings(parsed, onWarn?)` | The **single** normalizer shared by every channel: turns a parsed managed-settings object (server response, file on disk, …) into the canonical bag. Scalar leaves flatten; structured keys (declared in the `STRUCTURED_MANAGED_SETTINGS` table) are JSON-encoded under a single key each. The server adapter `adaptManagedSettings` and the file channel both call it. |
-| `collectManagedSettingsDefinitions(policyDefinitions)` | Aggregates every policy's `managedSettings` into one `key → { type }` map. **Single source of truth** for policy-backed keys and types; drives server projection and the declaration-driven portion of the MDM watcher. |
-| `MANAGED_SETTINGS_CONTROL_DEFINITIONS` | Fixed schema for transport controls consumed by the managed-settings pipeline itself. These keys are always added to the native MDM watcher but are not projected as configuration policies. |
-| `hasManagedSettingsDefinitions(policyDefinitions)` | Cheap short-circuiting existence check (does *any* policy declare a managed key?) — used to decide whether the declaration-driven watcher schema needs updating, without building the full aggregate. |
-| `projectManagedSettings(values, definitions, onWarn?)` | Keeps only declared keys whose runtime value **matches the declared type**. Undeclared keys and type mismatches are **dropped (validated, never coerced)**, with an optional warning. |
-| `pickManagedSettings(nativeMdm, server, file)` | Merges the channels **per key** by precedence (native MDM → server → file): the highest-precedence channel that sets a key wins, lower channels fill in keys the higher ones leave unset, and every contribution is recorded for provenance. **The extension point when adding a new channel** — extend the `ManagedSettingsChannel` union, the `MANAGED_SETTINGS_CHANNELS` order, and this function together. |
-| `managedSettingValue(key)` | Builds the standard pass-through `value` callback `policyData => policyData.managedSettings?.[key]`. Use for the common "lock to the managed value, else fall through" case (see [Declaring a managed setting](#declaring-a-managed-setting-on-a-policy)). |
-| `thirdPartyAgentEnabledValue(policyData)` | Shared `value` callback for the third-party harness policies (see [Governance presence](#governance-presence-disables-the-third-party-harnesses)). |
+| Function                                               | Role                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `flattenManagedSettings(obj)`                          | Flattens a nested response into dot-path scalars (used by `normalizeManagedSettings`).                                                                                                                                                                                                                                                                                                                         |
+| `normalizeManagedSettings(parsed, onWarn?)`            | The **single** normalizer shared by every channel: turns a parsed managed-settings object (server response, file on disk, …) into the canonical bag. Scalar leaves flatten; structured keys (declared in the `STRUCTURED_MANAGED_SETTINGS` table) are JSON-encoded under a single key each. The server adapter `adaptManagedSettings` and the file channel both call it.                                       |
+| `collectManagedSettingsDefinitions(policyDefinitions)` | Aggregates every policy's `managedSettings` into one `key → { type }` map. **Single source of truth** for policy-backed keys and types; drives server projection and the declaration-driven portion of the MDM watcher.                                                                                                                                                                                        |
+| `MANAGED_SETTINGS_CONTROL_DEFINITIONS`                 | Fixed schema for transport controls consumed by the managed-settings pipeline itself. These keys are always added to the native MDM watcher but are not projected as configuration policies.                                                                                                                                                                                                                   |
+| `hasManagedSettingsDefinitions(policyDefinitions)`     | Cheap short-circuiting existence check (does _any_ policy declare a managed key?) — used to decide whether the declaration-driven watcher schema needs updating, without building the full aggregate.                                                                                                                                                                                                          |
+| `projectManagedSettings(values, definitions, onWarn?)` | Keeps only declared keys whose runtime value **matches the declared type**. Undeclared keys and type mismatches are **dropped (validated, never coerced)**, with an optional warning.                                                                                                                                                                                                                          |
+| `pickManagedSettings(nativeMdm, server, file)`         | Merges the channels **per key** by precedence (native MDM → server → file): the highest-precedence channel that sets a key wins, lower channels fill in keys the higher ones leave unset, and every contribution is recorded for provenance. **The extension point when adding a new channel** — extend the `ManagedSettingsChannel` union, the `MANAGED_SETTINGS_CHANNELS` order, and this function together. |
+| `managedSettingValue(key)`                             | Builds the standard pass-through `value` callback `policyData => policyData.managedSettings?.[key]`. Use for the common "lock to the managed value, else fall through" case (see [Declaring a managed setting](#declaring-a-managed-setting-on-a-policy)).                                                                                                                                                     |
+| `thirdPartyAgentEnabledValue(policyData)`              | Shared `value` callback for the third-party harness policies (see [Governance presence](#governance-presence-disables-the-third-party-harnesses)).                                                                                                                                                                                                                                                             |
 
 ### Governance presence disables the third-party harnesses
 
@@ -162,18 +163,18 @@ Invariants:
 
 Constants (also in `copilotManagedSettings.ts`):
 
-| Constant | Value |
-|----------|-------|
-| `GITHUB_COPILOT_WIN32_REGISTRY_PATH` | `SOFTWARE\Policies\GitHubCopilot` |
-| `GITHUB_COPILOT_WIN32_POLICY_NAME` | `GitHubCopilot` (productName for the watcher) |
-| `GITHUB_COPILOT_MACOS_BUNDLE_ID` | `com.github.copilot` (CFPreferences app id) |
-| `COPILOT_DISABLE_BYPASS_PERMISSIONS_MODE_KEY` | `permissions.disableBypassPermissionsMode` |
-| `COPILOT_TOP_LEVEL_MODEL_KEY` | `model` (canonical; wins over the legacy nested key) |
-| `COPILOT_MODEL_KEY` | `permissions.model` (legacy; retained for original-schema deployments) |
-| `COPILOT_ENABLED_PLUGINS_KEY` | `enabledPlugins` |
-| `COPILOT_EXTRA_MARKETPLACES_KEY` | `extraKnownMarketplaces` |
-| `COPILOT_STRICT_MARKETPLACES_KEY` | `strictKnownMarketplaces` |
-| `COPILOT_FORCE_REMOTE_SETTINGS_REFRESH_KEY` | `forceRemoteSettingsRefresh` |
+| Constant                                      | Value                                                                  |
+| --------------------------------------------- | ---------------------------------------------------------------------- |
+| `GITHUB_COPILOT_WIN32_REGISTRY_PATH`          | `SOFTWARE\Policies\GitHubCopilot`                                      |
+| `GITHUB_COPILOT_WIN32_POLICY_NAME`            | `GitHubCopilot` (productName for the watcher)                          |
+| `GITHUB_COPILOT_MACOS_BUNDLE_ID`              | `com.github.copilot` (CFPreferences app id)                            |
+| `COPILOT_DISABLE_BYPASS_PERMISSIONS_MODE_KEY` | `permissions.disableBypassPermissionsMode`                             |
+| `COPILOT_TOP_LEVEL_MODEL_KEY`                 | `model` (canonical; wins over the legacy nested key)                   |
+| `COPILOT_MODEL_KEY`                           | `permissions.model` (legacy; retained for original-schema deployments) |
+| `COPILOT_ENABLED_PLUGINS_KEY`                 | `enabledPlugins`                                                       |
+| `COPILOT_EXTRA_MARKETPLACES_KEY`              | `extraKnownMarketplaces`                                               |
+| `COPILOT_STRICT_MARKETPLACES_KEY`             | `strictKnownMarketplaces`                                              |
+| `COPILOT_FORCE_REMOTE_SETTINGS_REFRESH_KEY`   | `forceRemoteSettingsRefresh`                                           |
 
 ## Wiring (where the MDM service is constructed)
 
@@ -182,16 +183,24 @@ Native MDM is desktop-main only (`src/vs/code/electron-main/main.ts`). The real 
 ```ts
 let nativeManagedSettingsService: NativeManagedSettingsService | undefined;
 if (isWindows) {
-    nativeManagedSettingsService = new NativeManagedSettingsService(
-        logService, GITHUB_COPILOT_WIN32_POLICY_NAME, { registryPath: GITHUB_COPILOT_WIN32_REGISTRY_PATH });
+  nativeManagedSettingsService = new NativeManagedSettingsService(
+    logService,
+    GITHUB_COPILOT_WIN32_POLICY_NAME,
+    { registryPath: GITHUB_COPILOT_WIN32_REGISTRY_PATH },
+  );
 } else if (isMacintosh) {
-    nativeManagedSettingsService = new NativeManagedSettingsService(
-        logService, GITHUB_COPILOT_MACOS_BUNDLE_ID);
+  nativeManagedSettingsService = new NativeManagedSettingsService(
+    logService,
+    GITHUB_COPILOT_MACOS_BUNDLE_ID,
+  );
 }
 if (nativeManagedSettingsService) {
-    services.set(INativeManagedSettingsService, nativeManagedSettingsService);
+  services.set(INativeManagedSettingsService, nativeManagedSettingsService);
 } else {
-    services.set(INativeManagedSettingsService, new NullNativeManagedSettingsService());
+  services.set(
+    INativeManagedSettingsService,
+    new NullNativeManagedSettingsService(),
+  );
 }
 ```
 
@@ -230,6 +239,7 @@ Follow this checklist only after the root [SKILL.md](./SKILL.md) routes the cont
 Once satisfied in the current window, the gate remains satisfied while subsequent refreshes for the same scope are in flight, including forced refreshes and refreshes after cache expiry. The last accepted policy stays active until the response arrives; a failure or timeout closes the gate, and retrying does not reopen it before success. Startup and scope changes still require a successful response before AI use. This does not change the polling interval or introduce a hard maximum policy age.
 
 Reference tests:
+
 - `src/vs/platform/policy/test/common/copilotManagedSettings.test.ts`
 - `src/vs/platform/policy/test/node/nativeManagedSettingsService.test.ts`
 - `src/vs/workbench/services/policies/test/browser/accountPolicyService.test.ts`
@@ -267,9 +277,9 @@ Rules & internals:
 
 ## What changed (PR history)
 
-| PR | Change |
-|----|--------|
-| [#318623](https://github.com/microsoft/vscode/pull/318623) | Wire `/copilot_internal/managed_settings` into `AccountPolicyService`/`IPolicyData`; add `chat.plugins.enabledPlugins`/`extraMarketplaces`/`strictMarketplaces` settings + `adaptManagedSettings` shape adaptation. No new `IPolicyService`. |
-| [#320991](https://github.com/microsoft/vscode/pull/320991) | Add native MDM delivery: `NativeManagedSettingsService` + `@vscode/policy-watcher`; let policies declare `managedSettings` mappings; wire the first V0 key `permissions.disableBypassPermissionsMode` → force `ChatToolsAutoApprove=false`. |
+| PR                                                         | Change                                                                                                                                                                                                                                                                                          |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [#318623](https://github.com/microsoft/vscode/pull/318623) | Wire `/copilot_internal/managed_settings` into `AccountPolicyService`/`IPolicyData`; add `chat.plugins.enabledPlugins`/`extraMarketplaces`/`strictMarketplaces` settings + `adaptManagedSettings` shape adaptation. No new `IPolicyService`.                                                    |
+| [#320991](https://github.com/microsoft/vscode/pull/320991) | Add native MDM delivery: `NativeManagedSettingsService` + `@vscode/policy-watcher`; let policies declare `managedSettings` mappings; wire the first V0 key `permissions.disableBypassPermissionsMode` → force `ChatToolsAutoApprove=false`.                                                     |
 | [#321218](https://github.com/microsoft/vscode/pull/321218) | Make `IPolicyData.managedSettings` the **single** channel: server + native MDM project into one canonical bag; structured settings carried as canonical JSON strings; remove the typed `enabledPlugins`/`extraKnownMarketplaces`/`strictKnownMarketplaces` fields. End-to-end equivalence test. |
-| [#321515](https://github.com/microsoft/vscode/pull/321515) | Add `policyReference` so one policy governs many settings; callback-free serialization; catalog + diagnostics list governed settings. Used to gate Claude (`Claude3PIntegration`) and Codex (`Codex3PIntegration`) across the editor and Agents windows. |
+| [#321515](https://github.com/microsoft/vscode/pull/321515) | Add `policyReference` so one policy governs many settings; callback-free serialization; catalog + diagnostics list governed settings. Used to gate Claude (`Claude3PIntegration`) and Codex (`Codex3PIntegration`) across the editor and Agents windows.                                        |

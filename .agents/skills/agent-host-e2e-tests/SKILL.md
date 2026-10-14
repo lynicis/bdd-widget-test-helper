@@ -9,7 +9,7 @@ These tests run the whole agent host end-to-end (real server, real bundled provi
 
 **Before doing anything, read the architecture + troubleshooting reference:** `src/vs/platform/agentHost/test/node/e2e/README.md`
 
-It documents the mental model, the fixture format, every config flag, and a symptom→cause→fix troubleshooting table. This skill is only the *workflows*; the README is the source of truth for *how it works*.
+It documents the mental model, the fixture format, every config flag, and a symptom→cause→fix troubleshooting table. This skill is only the _workflows_; the README is the source of truth for _how it works_.
 
 When validating an upstream provider/runtime fix, use [ci-artifact-testing](../ci-artifact-testing/SKILL.md) to check for a compatible CI artifact before building locally. Run the same strict replay against the bundled baseline and candidate; preserve the test assertions and existing cross-platform validation requirements.
 
@@ -71,7 +71,7 @@ Real-time streaming, mid-turn aborts, and POSIX-specific local execution (shell 
 - **POSIX-only** (fails on Windows): gate with `!isWindows`, or a targeted per-provider flag when only one provider diverges. See the worktree and subagent-reopen tests.
 - **Provider/OS-specific replay**: add a targeted config gate that still permits recording and unaffected platforms. See the Codex shell-tool Linux gate.
 
-Always add a comment explaining *why* the gate exists. Also add or update the corresponding entry in `e2e/KNOWN_ISSUES.md`. When the variant is enabled again, remove or update the entry in the same change.
+Always add a comment explaining _why_ the gate exists. Also add or update the corresponding entry in `e2e/KNOWN_ISSUES.md`. When the variant is enabled again, remove or update the entry in the same change.
 
 ## Cross-platform Azure validation
 

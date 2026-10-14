@@ -52,11 +52,11 @@ Prefer adding a discriminant or payload to an existing type, such as a new `Turn
 
 The three hooks added since clear a specific bar: **no existing payload could express them because they fire at a different moment or from a different source, not merely with different data.**
 
-- `onHydrateChat` restores host-owned chat state *before* a chat enters the catalog. `onHydrateTurns` runs lazily, after a provider returns turns, so reusing it would leave a restored peer chat untitled until it was opened.
+- `onHydrateChat` restores host-owned chat state _before_ a chat enters the catalog. `onHydrateTurns` runs lazily, after a provider returns turns, so reusing it would leave a restored peer chat untitled until it was opened.
 - `onIncomingRequest` gates a turn before it reaches a provider, and can reject it. No observer hook can refuse.
 - `onDidDispatchAction` observes server-dispatched and rejected actions, which `onDidApplyClientAction` structurally cannot see.
 
-Adding a `{ kind: ... }` discriminant to an existing hook was considered and rejected for `onHydrateChat`: the discriminant guidance covers payload variants *within* one moment, the way `TurnEndReason` discriminates outcomes of a single turn ending.
+Adding a `{ kind: ... }` discriminant to an existing hook was considered and rejected for `onHydrateChat`: the discriminant guidance covers payload variants _within_ one moment, the way `TurnEndReason` discriminates outcomes of a single turn ending.
 
 ## Anatomy and registration
 
@@ -70,22 +70,29 @@ Give every contribution its own directory under `node/chatContributions/<feature
 This is the complete shape of the existing Markdown plan rich-link contribution, adapted from `markdownPlanRichLinks/markdownPlanRichLinksContribution.ts`:
 
 ```ts
-export class MarkdownPlanRichLinksContribution extends Disposable implements IAgentHostChatContribution {
-	static readonly id = 'markdownPlanRichLinks';
-	readonly order = 100;
+export class MarkdownPlanRichLinksContribution
+  extends Disposable
+  implements IAgentHostChatContribution
+{
+  static readonly id = "markdownPlanRichLinks";
+  readonly order = 100;
 
-	constructor(
-		protected readonly _context: IAgentHostChatContributionContext,
-		@IAgentConfigurationService private readonly _agentConfigService: IAgentConfigurationService,
-	) {
-		super();
-	}
+  constructor(
+    protected readonly _context: IAgentHostChatContributionContext,
+    @IAgentConfigurationService
+    private readonly _agentConfigService: IAgentConfigurationService,
+  ) {
+    super();
+  }
 
-	onOutgoingTurn(turn: IOutgoingTurn): ISendContribution | undefined {
-		return this._agentConfigService.getRootValue(platformRootSchema, AgentHostMarkdownPlanRichLinksEnabledConfigKey)
-			? { instructions: [createMarkdownPlanRichLinksInstruction(turn.chat)] }
-			: undefined;
-	}
+  onOutgoingTurn(turn: IOutgoingTurn): ISendContribution | undefined {
+    return this._agentConfigService.getRootValue(
+      platformRootSchema,
+      AgentHostMarkdownPlanRichLinksEnabledConfigKey,
+    )
+      ? { instructions: [createMarkdownPlanRichLinksInstruction(turn.chat)] }
+      : undefined;
+  }
 }
 ```
 
@@ -93,15 +100,15 @@ Add its constructor to the one built-in list with `contributions.registerContrib
 
 ## The seven hooks
 
-| Hook | Fires when | Must not assume | Existing example |
-|---|---|---|---|
-| `onIncomingRequest` | A turn request asks to proceed to a provider, before any side effect. **Synchronous, and fails closed.** | It decides admission, so a throw rejects rather than being skipped. Return `accept`, `handled`, or `reject`; the first non-accept wins and later contributions are not consulted. | `localCommand` 50, `turnAdmission` 100 |
-| `onTurnEnd` | Any terminal outcome a started turn can reach, plus a request refused before its turn started. | Discriminate `rejected` from `error`: the former has no started turn to finalize and no checkpoint to capture. Do not throw. It does not fire for an agent-emitted terminal action arriving with no active turn, because the reducer no-ops for those. | `checkpointAndChangeset`, `queueDrain`, `githubReferences`, `sessionTitle`, `markUnread` |
-| `onDidApplyClientAction` | A client-dispatched action was applied to host state. | It never sees server-dispatched or rejected actions. Anything it sees definitely reduced. | `queueDrain` tracks queued senders; `sessionTitle` persists user title changes. |
-| `onDidDispatchAction` | Any action was dispatched and its outcome is known, from any origin. | It also delivers **rejected** actions that never reduced — check `rejectionReason`. Implementing this and `onDidApplyClientAction` together sees every client action twice. | `sessionInputNeeded`, `persistedTurnUsage`, `sessionFlags` |
-| `onOutgoingTurn` | Awaited after admission and provider lookup, before the turn is sent. | Rejected turns and `noAgent` failures never reach it. `IOutgoingTurn` carries the full `Message`; contributions can replace its text in order and add instructions, but cannot replace its already-committed attachments, model, agent, origin, or metadata. Prefer the message-text channel for context injection: changing instructions invalidates the provider prompt cache and increases user cost. Do not bypass the send path. | `markdownPlanRichLinks`, `chatSurface`, `sessionTitle`, `sideChat` |
-| `onHydrateTurns` | A provider has returned the complete restored turn list for a chat. | It is not limited to default chats and must return a list for the next stage. Do not assume its input is pristine provider output because earlier contributions may have transformed it. | `turnDelegation`, `persistedTurnUsage`, `worktreeAnnouncement`, `sideChat` |
-| `onHydrateChat` | A chat is being restored, eagerly, before it enters the session catalog. | It runs with no provider — it is a metadata-only read — and before the chat exists, so a chat memento taken here would outlive a failed registration. | `sessionTitle`, `chatDraft` |
+| Hook                     | Fires when                                                                                               | Must not assume                                                                                                                                                                                                                                                                                                                                                                                                                       | Existing example                                                                         |
+| ------------------------ | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `onIncomingRequest`      | A turn request asks to proceed to a provider, before any side effect. **Synchronous, and fails closed.** | It decides admission, so a throw rejects rather than being skipped. Return `accept`, `handled`, or `reject`; the first non-accept wins and later contributions are not consulted.                                                                                                                                                                                                                                                     | `localCommand` 50, `turnAdmission` 100                                                   |
+| `onTurnEnd`              | Any terminal outcome a started turn can reach, plus a request refused before its turn started.           | Discriminate `rejected` from `error`: the former has no started turn to finalize and no checkpoint to capture. Do not throw. It does not fire for an agent-emitted terminal action arriving with no active turn, because the reducer no-ops for those.                                                                                                                                                                                | `checkpointAndChangeset`, `queueDrain`, `githubReferences`, `sessionTitle`, `markUnread` |
+| `onDidApplyClientAction` | A client-dispatched action was applied to host state.                                                    | It never sees server-dispatched or rejected actions. Anything it sees definitely reduced.                                                                                                                                                                                                                                                                                                                                             | `queueDrain` tracks queued senders; `sessionTitle` persists user title changes.          |
+| `onDidDispatchAction`    | Any action was dispatched and its outcome is known, from any origin.                                     | It also delivers **rejected** actions that never reduced — check `rejectionReason`. Implementing this and `onDidApplyClientAction` together sees every client action twice.                                                                                                                                                                                                                                                           | `sessionInputNeeded`, `persistedTurnUsage`, `sessionFlags`                               |
+| `onOutgoingTurn`         | Awaited after admission and provider lookup, before the turn is sent.                                    | Rejected turns and `noAgent` failures never reach it. `IOutgoingTurn` carries the full `Message`; contributions can replace its text in order and add instructions, but cannot replace its already-committed attachments, model, agent, origin, or metadata. Prefer the message-text channel for context injection: changing instructions invalidates the provider prompt cache and increases user cost. Do not bypass the send path. | `markdownPlanRichLinks`, `chatSurface`, `sessionTitle`, `sideChat`                       |
+| `onHydrateTurns`         | A provider has returned the complete restored turn list for a chat.                                      | It is not limited to default chats and must return a list for the next stage. Do not assume its input is pristine provider output because earlier contributions may have transformed it.                                                                                                                                                                                                                                              | `turnDelegation`, `persistedTurnUsage`, `worktreeAnnouncement`, `sideChat`               |
+| `onHydrateChat`          | A chat is being restored, eagerly, before it enters the session catalog.                                 | It runs with no provider — it is a metadata-only read — and before the chat exists, so a chat memento taken here would outlive a failed registration.                                                                                                                                                                                                                                                                                 | `sessionTitle`, `chatDraft`                                                              |
 
 The call sites are in `node/agentSideEffects.ts`, `node/agentHostTurnStarter.ts`, and `node/agentService.ts`.
 
@@ -149,7 +156,7 @@ Create keys with `createChatMementoKey` or `createSessionMementoKey` in `common/
 - Session mementos and all supplied chat mementos are evicted when their owning session is disposed.
 - Extra key segments are part of the identity. Use them for bounded identities such as a queued message id.
 - **Call `deleteMemento` when an extra-segment value is no longer needed.** Setting its observable to `undefined` leaves its map entry alive until chat or session disposal, so a long-lived chat otherwise accumulates one entry per segment value.
-- `onHydrateChat` runs *before* its chat is registered, so a chat memento taken there would outlive a registration that then failed. No current contribution does this, but do not be the first without handling it.
+- `onHydrateChat` runs _before_ its chat is registered, so a chat memento taken there would outlive a registration that then failed. No current contribution does this, but do not be the first without handling it.
 
 `queueDrain/queueDrainContribution.ts` demonstrates the required delete on queued-message removal and consumption. Central eviction lives in `node/agentHostChatContributionsService.ts` and is called by `node/agentService.ts`.
 
@@ -161,7 +168,7 @@ The dispatcher logs and isolates failures independently for every observer hook:
 - A failed `onOutgoingTurn` contribution adds no instructions and does not block the send or later contributions.
 - A failed `onHydrateTurns` or `onHydrateChat` contribution deliberately passes the previous value to the next stage. Losing chat history, a title, or a draft is worse than losing one enrichment.
 
-**`onIncomingRequest` inverts this and fails closed.** A contribution that throws there *rejects* the request with `internalError` at stage `validation`. That gate is the enforcement behind the UI hiding the composer, so failing open would let a buggy or remote client run work in a session that may no longer have its isolated worktree on disk. Losing one enrichment is survivable; letting a request past a guard is not.
+**`onIncomingRequest` inverts this and fails closed.** A contribution that throws there _rejects_ the request with `internalError` at stage `validation`. That gate is the enforcement behind the UI hiding the composer, so failing open would let a buggy or remote client run work in a session that may no longer have its isolated worktree on disk. Losing one enrichment is survivable; letting a request past a guard is not.
 
 It is also **deliberately synchronous**, for the same reason: a gate has to decide before the send path performs any await, so the state it reads cannot change between the decision and its effect. Every admission check the host makes today is already synchronous. An async version was tried first and broke three `agentSideEffects` tests by deferring the read-only guard one microtask past the assertions — which was the design saying the gate belongs before the first await.
 

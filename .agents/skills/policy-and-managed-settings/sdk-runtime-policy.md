@@ -51,16 +51,16 @@ Copilot Agent Host resolves native mode restrictions before applying the legacy 
 
 ✅ Allowed; ❌ Blocked.
 
-| # | Legacy policy JSON | Managed-settings JSON | Full Local chat | Copilot/Agent Host: Allow All | Copilot/Agent Host: Assisted | Copilot/Agent Host: Manual |
-|---|---|---|---|:---:|:---:|:---:|
-| 1 | `{}` | `{}` | Available | ✅ | ✅ | ✅ |
-| 2 | `{"ChatToolsAutoApprove":false}` | `{}` | Available, legacy restrictions | ❌ | ❌ | ✅ |
-| 3 | `{}` | `{"permissions":{"disableBypassPermissionsMode":"disable"}}` | Unavailable; migrate to Copilot | ❌ | ✅ | ✅ |
-| 4 | `{"ChatToolsAutoApprove":false}` | `{"permissions":{"disableBypassPermissionsMode":"disable"}}` | Unavailable; migrate to Copilot | ❌ | ✅ | ✅ |
-| 5 | `{}` | `{"permissions":{"disableAssistedPermissionsMode":true}}` | Unavailable; migrate to Copilot | ✅ | ❌ | ✅ |
-| 6 ⚠️ | `{"ChatToolsAutoApprove":false}` | `{"permissions":{"disableAssistedPermissionsMode":true}}` | Unavailable; migrate to Copilot | ✅ | ❌ | ✅ |
-| 7 | `{"ChatToolsAutoApprove":false}` | `{"permissions":{"disableBypassPermissionsMode":"disable","disableAssistedPermissionsMode":true}}` | Unavailable; migrate to Copilot | ❌ | ❌ | ✅ |
-| 8 ⚠️ | `{"ChatToolsAutoApprove":false}` | `{"permissions":{"disableBypassPermissionsMode":"enable"}}` | Unavailable; migrate to Copilot | ✅ | ✅ | ✅ |
+| #    | Legacy policy JSON               | Managed-settings JSON                                                                              | Full Local chat                 | Copilot/Agent Host: Allow All | Copilot/Agent Host: Assisted | Copilot/Agent Host: Manual |
+| ---- | -------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------- | :---------------------------: | :--------------------------: | :------------------------: |
+| 1    | `{}`                             | `{}`                                                                                               | Available                       |              ✅               |              ✅              |             ✅             |
+| 2    | `{"ChatToolsAutoApprove":false}` | `{}`                                                                                               | Available, legacy restrictions  |              ❌               |              ❌              |             ✅             |
+| 3    | `{}`                             | `{"permissions":{"disableBypassPermissionsMode":"disable"}}`                                       | Unavailable; migrate to Copilot |              ❌               |              ✅              |             ✅             |
+| 4    | `{"ChatToolsAutoApprove":false}` | `{"permissions":{"disableBypassPermissionsMode":"disable"}}`                                       | Unavailable; migrate to Copilot |              ❌               |              ✅              |             ✅             |
+| 5    | `{}`                             | `{"permissions":{"disableAssistedPermissionsMode":true}}`                                          | Unavailable; migrate to Copilot |              ✅               |              ❌              |             ✅             |
+| 6 ⚠️ | `{"ChatToolsAutoApprove":false}` | `{"permissions":{"disableAssistedPermissionsMode":true}}`                                          | Unavailable; migrate to Copilot |              ✅               |              ❌              |             ✅             |
+| 7    | `{"ChatToolsAutoApprove":false}` | `{"permissions":{"disableBypassPermissionsMode":"disable","disableAssistedPermissionsMode":true}}` | Unavailable; migrate to Copilot |              ❌               |              ❌              |             ✅             |
+| 8 ⚠️ | `{"ChatToolsAutoApprove":false}` | `{"permissions":{"disableBypassPermissionsMode":"enable"}}`                                        | Unavailable; migrate to Copilot |              ✅               |              ✅              |             ✅             |
 
 Host-injected managed settings are startup configuration:
 

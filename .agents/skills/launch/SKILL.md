@@ -14,7 +14,7 @@ You're working on VS Code itself and you want to:
 
 This skill provides a launcher that clones an authenticated user-data-dir to a throwaway temp folder, picks free ports for every debug surface, and prints them as JSON so you can pick them up programmatically.
 
-The clone is **slim**: workspace storage, browser caches, file history, cached VSIX backups, and old logs are excluded by default. On macOS, auth tokens live in the OS keychain plus small files inside `User/globalStorage` - both of which *are* preserved. On Windows the GitHub session lives in the **shared-data-dir** instead, which the launcher seeds separately (see [Windows authentication](#windows-authentication)).
+The clone is **slim**: workspace storage, browser caches, file history, cached VSIX backups, and old logs are excluded by default. On macOS, auth tokens live in the OS keychain plus small files inside `User/globalStorage` - both of which _are_ preserved. On Windows the GitHub session lives in the **shared-data-dir** instead, which the launcher seeds separately (see [Windows authentication](#windows-authentication)).
 
 ## Prerequisites
 
@@ -123,14 +123,14 @@ The exclude list mirrors the one used by VS Code's own perf-test skill (`.github
 
 #### Windows authentication
 
-Windows has no shared per-app keychain for these secrets, so they live in files on disk - but **not all in the user-data-dir**. The GitHub session is stored at `StorageScope.APPLICATION_SHARED` *only on Windows* (see `useSharedStorage` and `CROSS_APP_SHARED_SECRET_KEYS` in `src/vs/platform/secrets/common/secrets.ts`), which puts the two halves of the credential in **different directories**:
+Windows has no shared per-app keychain for these secrets, so they live in files on disk - but **not all in the user-data-dir**. The GitHub session is stored at `StorageScope.APPLICATION_SHARED` _only on Windows_ (see `useSharedStorage` and `CROSS_APP_SHARED_SECRET_KEYS` in `src/vs/platform/secrets/common/secrets.ts`), which puts the two halves of the credential in **different directories**:
 
-| Piece | Location |
-|---|---|
-| Encrypted GitHub session blob | `<shared-data-dir>/sharedStorage/state.vscdb` |
-| DPAPI-wrapped decryption key (`os_crypt.encrypted_key`) | `<user-data-dir>/Local State` |
+| Piece                                                   | Location                                      |
+| ------------------------------------------------------- | --------------------------------------------- |
+| Encrypted GitHub session blob                           | `<shared-data-dir>/sharedStorage/state.vscdb` |
+| DPAPI-wrapped decryption key (`os_crypt.encrypted_key`) | `<user-data-dir>/Local State`                 |
 
-The launcher therefore seeds **both**: it copies the source profile *and* copies the source shared-data-dir into the run's throwaway `shared-data` dir. The source resolves the same way `IEnvironmentService.appSharedDataHome` does - `$env:CODE_OSS_DEV_AUTHED_SHARED_DATA_DIR` if set, else `$env:VSCODE_PORTABLE\shared-data` when running portable, else `~/<product.sharedDataFolderName>` (i.e. `%USERPROFILE%\.vscode-oss-shared`). It also verifies `Local State`, `machineid`, and `Network` survived the profile copy, and warns on stderr if neither database holds a GitHub session.
+The launcher therefore seeds **both**: it copies the source profile _and_ copies the source shared-data-dir into the run's throwaway `shared-data` dir. The source resolves the same way `IEnvironmentService.appSharedDataHome` does - `$env:CODE_OSS_DEV_AUTHED_SHARED_DATA_DIR` if set, else `$env:VSCODE_PORTABLE\shared-data` when running portable, else `~/<product.sharedDataFolderName>` (i.e. `%USERPROFILE%\.vscode-oss-shared`). It also verifies `Local State`, `machineid`, and `Network` survived the profile copy, and warns on stderr if neither database holds a GitHub session.
 
 > This asymmetry is invisible on macOS/Linux, where the same token lands inside the profile. A Windows-only "always signed out" symptom is a shared-data-dir problem, **not** a profile problem: signing in against the source profile writes a perfectly good session, but before this seeding existed every launch handed Code OSS an empty shared dir and threw it away.
 
@@ -139,6 +139,7 @@ The bootstrap script writes the session blob to `%USERPROFILE%\.vscode-oss-share
 > Profiles that predate the `APPLICATION_SHARED` migration can still hold the secret in `User/globalStorage/state.vscdb`. `ApplicationSharedStorageMain` registers application storage as a read fallback, so those profiles authenticate even with no shared-data-dir present - which is why a missing shared dir is reported as a fact rather than assumed fatal.
 
 Excluded (transient, regenerable, or known-not-needed):
+
 - `User/workspaceStorage/` - per-workspace state, **including stored chat sessions** (often multi-GB)
 - `User/History/` - local file edit history
 - `CachedExtensionVSIXs` - backup VSIXs (hundreds of MB)
@@ -158,7 +159,26 @@ The script runs pre-launch (electron download, compile-if-missing, built-in exte
 For repeated launches of the same prepared build, pass `--skip-prelaunch` after one successful normal launch. Only use it while a watch task keeps all output current or neither sources nor build outputs have changed; otherwise the new instance may run stale or incomplete code.
 
 ```json
-{"pid":12345,"cdpPort":53111,"extHostPort":53112,"mainPort":53113,"agentHostPort":53114,"userDataDir":".../user-data","extensionsDir":".../extensions","sharedDataDir":".../shared-data","runDir":"...","logFile":".../code.log","repo":"...","agents":false,"timings":{"profileMs":231,"preLaunchMs":251,"cdpReadyMs":459,"totalMs":941}}
+{
+  "pid": 12345,
+  "cdpPort": 53111,
+  "extHostPort": 53112,
+  "mainPort": 53113,
+  "agentHostPort": 53114,
+  "userDataDir": ".../user-data",
+  "extensionsDir": ".../extensions",
+  "sharedDataDir": ".../shared-data",
+  "runDir": "...",
+  "logFile": ".../code.log",
+  "repo": "...",
+  "agents": false,
+  "timings": {
+    "profileMs": 231,
+    "preLaunchMs": 251,
+    "cdpReadyMs": 459,
+    "totalMs": 941
+  }
+}
 ```
 
 The additive `timings` object uses monotonic elapsed time to identify time spent preparing the isolated profile, running pre-launch, and starting Code OSS through CDP readiness. `totalMs` covers the complete launcher operation through readiness.
@@ -189,12 +209,12 @@ $pid = $info.pid
 
 ### What each port is for
 
-| Port | Process | Use with |
-|------|---------|----------|
-| `cdpPort` (`--remote-debugging-port`) | Renderer (the workbench window) | `@playwright/cli` over CDP, also Chrome DevTools |
-| `extHostPort` (`--inspect-extensions`) | Extension host (Node) | `dap-cli` (Node inspector protocol) |
-| `mainPort` (`--inspect`) | Electron main process (Node) | `dap-cli` (Node inspector protocol) |
-| `agentHostPort` (`--inspect-agenthost`) | Agent host process (Node) | `dap-cli` (Node inspector protocol) |
+| Port                                    | Process                         | Use with                                         |
+| --------------------------------------- | ------------------------------- | ------------------------------------------------ |
+| `cdpPort` (`--remote-debugging-port`)   | Renderer (the workbench window) | `@playwright/cli` over CDP, also Chrome DevTools |
+| `extHostPort` (`--inspect-extensions`)  | Extension host (Node)           | `dap-cli` (Node inspector protocol)              |
+| `mainPort` (`--inspect`)                | Electron main process (Node)    | `dap-cli` (Node inspector protocol)              |
+| `agentHostPort` (`--inspect-agenthost`) | Agent host process (Node)       | `dap-cli` (Node inspector protocol)              |
 
 ## Drive the UI with @playwright/cli
 
@@ -297,6 +317,7 @@ The script returns `{ focused, focusChanged, focusInvoked, shortcutInvoked, comm
   3. Monaco updates its DOM **asynchronously** after a paste event — a synchronous read-back inside the same `eval` returns stale state. The helper polls rendered view lines across paint cycles until the pasted prefix appears or verification times out.
 
 - **Per-key `press`** (universal but slow — each press is a separate CLI invocation with Node startup cost):
+
   ```bash
   npx @playwright/cli -s=$PW_SESSION press H
   npx @playwright/cli -s=$PW_SESSION press i
@@ -350,11 +371,11 @@ The Agents window does not use the regular workbench `.interactive-input-editor`
 
 ```js
 // Regular-workbench-specific selector; do not assume this exists in Agents.
-document.querySelectorAll('.interactive-input-editor .view-line')
+document.querySelectorAll(".interactive-input-editor .view-line");
 
 // More useful checks in Agents.
-document.querySelectorAll('.view-line')
-document.activeElement?.matches('.native-edit-context, textarea.inputarea')
+document.querySelectorAll(".view-line");
+document.activeElement?.matches(".native-edit-context, textarea.inputarea");
 ```
 
 The focus script accounts for these DOM differences and prioritizes the active Agents session.
@@ -422,7 +443,7 @@ You can run `@playwright/cli` and `dap-cli` against the **same window simultaneo
 
 Every launch picks fresh ports and a fresh temp `runDir`, so you can run as many concurrent Code OSS windows as your machine can handle. Each one's ports come back in its own JSON blob - keep them separate.
 
-The launcher also passes `--shared-data-dir=<runDir>/shared-data`. This is **required** for multi-instance isolation: Code OSS keeps a fixed-path SQLite DB at `~/.<dataFolderName>-shared/sharedStorage/state.vscdb` that is *not* covered by `--user-data-dir`. Without overriding it, two concurrent instances would fight over the same file and one would die with "shared background process terminated unexpectedly". Each launch gets its own `shared-data` dir, **seeded from the source shared-data-dir** so the Windows GitHub session survives - see [Windows authentication](#windows-authentication) for why that copy matters.
+The launcher also passes `--shared-data-dir=<runDir>/shared-data`. This is **required** for multi-instance isolation: Code OSS keeps a fixed-path SQLite DB at `~/.<dataFolderName>-shared/sharedStorage/state.vscdb` that is _not_ covered by `--user-data-dir`. Without overriding it, two concurrent instances would fight over the same file and one would die with "shared background process terminated unexpectedly". Each launch gets its own `shared-data` dir, **seeded from the source shared-data-dir** so the Windows GitHub session survives - see [Windows authentication](#windows-authentication) for why that copy matters.
 
 ## Restart after source changes
 

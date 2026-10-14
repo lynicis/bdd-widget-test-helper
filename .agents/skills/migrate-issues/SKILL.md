@@ -3,6 +3,7 @@ name: migrate-issues
 description: migrate GitHub issues from one repository to another
 disable-model-invocation: true
 ---
+
 # Issue Migration Prompt
 
 Use this prompt when migrating issues from one GitHub repository to another (e.g., from `microsoft/vscode-copilot` to `microsoft/vscode`).

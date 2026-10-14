@@ -3,6 +3,7 @@ name: component
 description: Help author a component specification for an agent.
 disable-model-invocation: true
 ---
+
 <overview>
 Your goal is to create a component overview in markdown given the context provided by the user. The overview should include a brief description of the component, its main features, an architectural diagram and layout of important code files and their relationships. The purpose of this overview is to enable a developer to attach it to a feature request and ensure the agent has enough context to make correct code changes without breaking functionality.
 </overview>
@@ -19,6 +20,7 @@ Your goal is to create a component overview in markdown given the context provid
 Brief description of what this component does and why it exists.
 
 ## Scope
+
 - What functionality is included
 - What is explicitly out of scope
 - Integration points with other components
@@ -26,15 +28,19 @@ Brief description of what this component does and why it exists.
 ## Architecture
 
 ### High-Level Design
+
 [Architectural diagram or description of key patterns used]
 
 ### Key Classes & Interfaces
+
 - **[ClassName]**: Brief description of responsibility
 - **[InterfaceName]**: Purpose and main methods
 - **[ServiceName]**: Service responsibilities
 
 ### Key Files
+
 List all the key files and a brief description of their purpose:
+
 - **`src/vs/[path/to/component]/[filename.ts]`**: [Purpose and main exports]
 - **`src/vs/[path/to/component]/[service.ts]`**: [Service implementation details]
 - **`src/vs/[path/to/component]/[contribution.ts]`**: [Workbench contributions]
@@ -44,6 +50,7 @@ List all the key files and a brief description of their purpose:
 - Reserve a section for any specific development practices or patterns relevant to this component. These will be edited by a developer or agent as needed.
 
 ---
+
 </format>
 
 <instructions>

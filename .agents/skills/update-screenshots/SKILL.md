@@ -11,10 +11,10 @@ Screenshot **images** are not stored in the repository — they live in an exter
 
 The `Screenshots & Tests` job in [`.github/workflows/component-fixtures.yml`](../../workflows/component-fixtures.yml) produces two independent results:
 
-| Result | Blocking? | Action |
-| --- | --- | --- |
-| Screenshot **diff report** (PR comment with before/after images) | No — informational | Review the visuals. Nothing to commit. |
-| **blocks-ci hash mismatch** | **Yes — fails the check** | Update `blocks-ci-screenshots.md` and commit. |
+| Result                                                           | Blocking?                 | Action                                        |
+| ---------------------------------------------------------------- | ------------------------- | --------------------------------------------- |
+| Screenshot **diff report** (PR comment with before/after images) | No — informational        | Review the visuals. Nothing to commit.        |
+| **blocks-ci hash mismatch**                                      | **Yes — fails the check** | Update `blocks-ci-screenshots.md` and commit. |
 
 A fixture opts into the blocking gate with `labels: { kind: 'screenshot', blocksCi: true }`. Only those fixtures appear in `blocks-ci-screenshots.md`.
 
@@ -72,6 +72,7 @@ Edit only the changed lines in `test/componentFixtures/blocks-ci-screenshots.md`
 
 ```md
 #### editor/inlineChatZoneWidget/InlineChatZoneWidget/Dark
+
 ![screenshot](https://hediet-screenshots.azurewebsites.net/images/<NEW_HASH>)
 ```
 

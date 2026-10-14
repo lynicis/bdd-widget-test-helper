@@ -56,6 +56,7 @@ These are the files that will actually land when the branch merges.
 ### 5. Classify each file in the merge diff
 
 For each file in step 4:
+
 - If it's in `author_files` → **DIRECT**
 - Else, walk the rename map transitively (follow chains: current → old → older) and check if any ancestor is in `author_files` → **VIA_RENAME**
 - Otherwise → not this author's contribution
@@ -162,7 +163,7 @@ print(f'\nTotal: {len(results)} files')
 
 ### Alternative Script
 
-After following the process above, run this script to cross-check files touched by an author against the branch diff.   You can do this both with an without src/vs/sessions.
+After following the process above, run this script to cross-check files touched by an author against the branch diff. You can do this both with an without src/vs/sessions.
 
 ```
 AUTHOR=""

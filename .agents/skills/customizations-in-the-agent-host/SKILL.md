@@ -20,17 +20,17 @@ Read this before changing anything in:
 
 A plugin or MCP server carries `enablement?: CustomizationEnablement[]` — an ordered list of decisions, most specific first:
 
-| Kind | Owner | Meaning |
-|---|---|---|
-| `Session` | agent host | this session only |
-| `Workspace` | agent host | this working directory (carries `uri`) |
-| `Global` | client, unless the host discovered it | everywhere |
+| Kind        | Owner                                 | Meaning                                |
+| ----------- | ------------------------------------- | -------------------------------------- |
+| `Session`   | agent host                            | this session only                      |
+| `Workspace` | agent host                            | this working directory (carries `uri`) |
+| `Global`    | client, unless the host discovered it | everywhere                             |
 
 `isCustomizationEnabled()` picks the first entry; absent entries inherit from the next scope out, and an absent list means enabled. Never re-add a parallel `enabled` boolean to plugins or MCP servers — a second source of truth is what this design exists to remove. (`DirectoryCustomization` legitimately keeps a plain `enabled`; consumers derive its state through `isCustomizationEnabled()` all the same.)
 
 ### Who owns `Global`
 
-The host owns `Global` for anything it **discovered**, even when that thing lives inside a plugin the client forwarded. The client owns `Global` only for what it actually **bundled**. The discriminator is `childEnablement` — *not* `clientId`. A plugin whose `childEnablement` record has a key for a child MCP server means "the client bundled this child and owns its global decision"; anything else the host discovered by parsing the plugin directory.
+The host owns `Global` for anything it **discovered**, even when that thing lives inside a plugin the client forwarded. The client owns `Global` only for what it actually **bundled**. The discriminator is `childEnablement` — _not_ `clientId`. A plugin whose `childEnablement` record has a key for a child MCP server means "the client bundled this child and owns its global decision"; anything else the host discovered by parsing the plugin directory.
 
 ### The overlay model
 
@@ -58,7 +58,7 @@ An MCP server's storage key is derived from `owningPluginUri`, never from where 
 Two rules follow:
 
 1. Never "fix" a pending customization by defaulting it to enabled.
-2. Never cache the pending verdict. Pending is a *temporary* state; recompute it, and republish when the enablement service settles. A cached `pendingEnablement: true` silently drops a plugin forever.
+2. Never cache the pending verdict. Pending is a _temporary_ state; recompute it, and republish when the enablement service settles. A cached `pendingEnablement: true` silently drops a plugin forever.
 
 A pending child MCP server also marks its **containing plugin** pending, because a plugin directory can cause the SDK to discover the child on its own.
 
@@ -72,15 +72,15 @@ The corollary: **state computed once must be rebuilt when its inputs change.** M
 
 ## Enforcement is per-provider, and they differ
 
-| Provider | Launch | Mid-session |
-|---|---|---|
-| Copilot | `disabledMcpServers` on `SessionConfig` at open/resume | `rpc.mcp.enable` / `rpc.mcp.disable` |
-| Claude | session options at materialize | live reconcile |
-| Codex | MCP servers supplied only at `thread/start` / resume | **not possible** — documented limitation |
+| Provider | Launch                                                 | Mid-session                              |
+| -------- | ------------------------------------------------------ | ---------------------------------------- |
+| Copilot  | `disabledMcpServers` on `SessionConfig` at open/resume | `rpc.mcp.enable` / `rpc.mcp.disable`     |
+| Claude   | session options at materialize                         | live reconcile                           |
+| Codex    | MCP servers supplied only at `thread/start` / resume   | **not possible** — documented limitation |
 
 Enforcement traps:
 
-- The post-startup reconcile runs ~800 ms after launch. Anything gated *only* there can still start, and request authentication, during the launch window. Gate at launch too.
+- The post-startup reconcile runs ~800 ms after launch. Anything gated _only_ there can still start, and request authentication, during the launch window. Gate at launch too.
 - The SDK's `not_configured` status must **not** be translated as `enabled: true`. That bug made a correct "skip this disabled server" decision look like "enable it".
 - Copilot launch gating must include names from user `mcp.config.list`, not only the client snapshot. Reconcile and authentication also resolve newly discovered names before the host retains them; later publication must not turn an inherited enabled default into explicit intent to enable an SDK-configured-disabled server.
 - Root MCP customization IDs use the owning AHP session ID, not its SDK backing ID. On restoration, derive declared MCP names from the applied root/plugin definitions, never from the retained host-published runtime inventory.

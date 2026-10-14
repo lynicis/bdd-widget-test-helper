@@ -1,6 +1,6 @@
 ---
 name: code-oss-logs
-description: 'Find and read timestamped process logs from Code OSS dev builds, including main.log, renderer.log, extension host logs, and agenthost.log. For bundles produced by Export Agent Host Debug Logs, use agent-host-logs.'
+description: "Find and read timestamped process logs from Code OSS dev builds, including main.log, renderer.log, extension host logs, and agenthost.log. For bundles produced by Export Agent Host Debug Logs, use agent-host-logs."
 ---
 
 # Code OSS Logs
@@ -9,9 +9,9 @@ Find and display logs from the most recent Code OSS or Agents app dev run.
 
 ## Log Root Directories
 
-| App | Default User Data Dir | Logs Path |
-|-----|-----------------------|-----------|
-| Code OSS | `$HOME/.vscode-oss-dev` | `$HOME/.vscode-oss-dev/logs/` |
+| App        | Default User Data Dir   | Logs Path                     |
+| ---------- | ----------------------- | ----------------------------- |
+| Code OSS   | `$HOME/.vscode-oss-dev` | `$HOME/.vscode-oss-dev/logs/` |
 | Agents app | `$HOME/.vscode-oss-dev` | `$HOME/.vscode-oss-dev/logs/` |
 
 If Code OSS was launched with `--user-data-dir=<dir>`, use `<dir>/logs/` instead of the defaults above. Launch and debugging helpers often create temporary user data dirs under `.build/`; always prefer the exact user data dir from the launch command when it is known.
@@ -22,11 +22,11 @@ Each run creates a timestamped folder like `20260330T163430`. The most recent fo
 
 1. **Identify which app** the user is asking about: Code OSS or Agents app. If unclear, check both.
 2. **Find the most recent log folder**:
-    ```bash
-    ls -lt "$HOME/.vscode-oss-dev/logs" | head -5
-    # or for a custom user data dir:
-    ls -lt "<user-data-dir>/logs" | head -5
-    ```
+   ```bash
+   ls -lt "$HOME/.vscode-oss-dev/logs" | head -5
+   # or for a custom user data dir:
+   ls -lt "<user-data-dir>/logs" | head -5
+   ```
 3. **Navigate into the most recent folder** and list contents.
 4. **Read the relevant log file(s)** based on what the user is investigating. Use `tail` for recent entries or `rg` to filter.
 
@@ -81,17 +81,17 @@ Follow the returned `clientId` through `[WebPubSubRelayTransport]` and `[RemoteA
 
 ## Key Files by Use Case
 
-| Investigating... | Check these files |
-|------------------|-------------------|
-| App startup / crashes | `main.log`, `window1/renderer.log` |
-| Extension issues | `window1/exthost/exthost.log`, `window1/exthost/<publisher.ext>/` |
-| Copilot / agent issues | `agenthost.log`, `window1/exthost/GitHub.copilot-chat/` |
-| Agent host IPC (Agents app) | `window1/output_<timestamp>/agenthost.*.log` |
-| MCP server problems | `mcpGateway.log`, `window1/mcpServer.*.log` |
-| Terminal problems | `terminal.log`, `ptyhost.log` |
-| Network / auth issues | `network-shared.log`, `window1/network.log` |
-| Settings sync | `userDataSync.log` |
-| Agent customizations | `window1/customizationsDebug.log` (Agents app) |
+| Investigating...            | Check these files                                                 |
+| --------------------------- | ----------------------------------------------------------------- |
+| App startup / crashes       | `main.log`, `window1/renderer.log`                                |
+| Extension issues            | `window1/exthost/exthost.log`, `window1/exthost/<publisher.ext>/` |
+| Copilot / agent issues      | `agenthost.log`, `window1/exthost/GitHub.copilot-chat/`           |
+| Agent host IPC (Agents app) | `window1/output_<timestamp>/agenthost.*.log`                      |
+| MCP server problems         | `mcpGateway.log`, `window1/mcpServer.*.log`                       |
+| Terminal problems           | `terminal.log`, `ptyhost.log`                                     |
+| Network / auth issues       | `network-shared.log`, `window1/network.log`                       |
+| Settings sync               | `userDataSync.log`                                                |
+| Agent customizations        | `window1/customizationsDebug.log` (Agents app)                    |
 
 ## Useful Commands
 
@@ -112,11 +112,9 @@ When using temporary `console.log` probes and you need those probes to persist i
 
 1. In `src/vs/platform/log/common/log.ts`, find `isDevConsoleLogForwardingEnabled`.
 2. Temporarily enable the commented `Boolean("true")` line:
-    ```ts
-    export const isDevConsoleLogForwardingEnabled = false
-        || Boolean("true") // done "weirdly" so that a lint warning prevents you from pushing this
-        ;
-    ```
+   ```ts
+   export const isDevConsoleLogForwardingEnabled = false || Boolean("true"); // done "weirdly" so that a lint warning prevents you from pushing this
+   ```
 3. Build or let the watch task pick up the change.
 4. Launch Code OSS or the Agents app and reproduce the issue.
 5. Read the relevant logs.

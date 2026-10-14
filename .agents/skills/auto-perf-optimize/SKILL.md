@@ -168,16 +168,19 @@ Prefer a warmed-up baseline such as `03-iteration-01.heapsnapshot` over startup 
 After capture, use heap-snapshot-analysis. A minimal scratchpad comparison script looks like this:
 
 ```javascript
-import path from 'node:path';
-import { compareSnapshots, printComparison } from '../helpers/compareSnapshots.ts';
+import path from "node:path";
+import {
+  compareSnapshots,
+  printComparison,
+} from "../helpers/compareSnapshots.ts";
 
 const runDir = process.env.RUN;
 if (!runDir) {
-	throw new Error('Set RUN to a chat-memory-smoke output directory');
+  throw new Error("Set RUN to a chat-memory-smoke output directory");
 }
 
-const before = path.join(runDir, 'heap', '03-iteration-01.heapsnapshot');
-const after = path.join(runDir, 'heap', '03-iteration-08.heapsnapshot');
+const before = path.join(runDir, "heap", "03-iteration-01.heapsnapshot");
+const after = path.join(runDir, "heap", "03-iteration-08.heapsnapshot");
 printComparison(compareSnapshots(before, after));
 ```
 
