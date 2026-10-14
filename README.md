@@ -1,6 +1,7 @@
 # BDD Widget Test Helper
 
 [![Visual Studio Marketplace Version](https://vsmarketplacebadges.dev/version/lynicis.bdd-widget-test-helper.svg)](https://marketplace.visualstudio.com/items?itemName=lynicis.bdd-widget-test-helper)
+![Open VSX Version](https://img.shields.io/open-vsx/v/lynicis/bdd-widget-test-helper)
 
 VS Code / VSCodium extension for Flutter developers practicing A-TDD with the
 [`bdd_widget_test`](https://pub.dev/packages/bdd_widget_test) package. Jump
