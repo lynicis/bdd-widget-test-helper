@@ -12,10 +12,10 @@
  *      (JS `\w` == Dart `\w` == ASCII only), collapse whitespace.
  *   4. camelize → the Dart function name; underscore() of that → the file name.
  */
-import { DIACRITIC_MULTI, DIACRITIC_SINGLE } from './diacritics.generated';
+import { DIACRITIC_MULTI, DIACRITIC_SINGLE } from "./diacritics.generated";
 
 export function removeDiacritics(text: string): string {
-  let out = '';
+  let out = "";
   for (const ch of text) {
     const single = DIACRITIC_SINGLE[ch];
     if (single !== undefined) {
@@ -50,16 +50,17 @@ function asciiType(ch: string): number {
 
 /** "The app is running" => "the_app_is_running"; "theAppIsRunning" => "the_app_is_running" */
 export function underscore(input: string): string {
-  let sb = '';
+  let sb = "";
   let separate = false;
   for (const s of Array.from(input)) {
     const type = asciiType(s);
     if (separate && type & _UPPER) {
-      sb += '_' + s.toLowerCase();
+      sb += "_" + s.toLowerCase();
       separate = true;
     } else {
       sb += s.toLowerCase();
-      separate = (type & _ALPHA_NUM) !== 0 || (type & _UNDERSCORE) !== 0 && separate;
+      separate =
+        (type & _ALPHA_NUM) !== 0 || ((type & _UNDERSCORE) !== 0 && separate);
     }
   }
   return sb;
@@ -68,7 +69,7 @@ export function underscore(input: string): string {
 /** "The_app_is_running" => "theAppIsRunning" */
 export function camelize(input: string): string {
   const string = input.toLowerCase();
-  let sb = '';
+  let sb = "";
   let capitalize = true;
   let isBeginning = true;
   let remove = false;
@@ -112,14 +113,14 @@ export function parseRawStepLine(stepLine: string): string[] {
   let parameter: string[] = [];
   let bracketsNesting = 0;
   for (const c of stepLine) {
-    if (c === '{') {
+    if (c === "{") {
       bracketsNesting++;
       if (bracketsNesting === 1) continue;
     }
-    if (c === '}') {
+    if (c === "}") {
       bracketsNesting--;
       if (bracketsNesting === 0) {
-        parameters.push(parameter.join(''));
+        parameters.push(parameter.join(""));
         parameter = [];
         continue;
       }
@@ -127,7 +128,7 @@ export function parseRawStepLine(stepLine: string): string[] {
     if (bracketsNesting === 0) name.push(c);
     else parameter.push(c);
   }
-  return [name.join(''), ...parameters];
+  return [name.join(""), ...parameters];
 }
 
 const examplesRegExp = /<(.*?)>/gi;
@@ -136,11 +137,11 @@ const repeatingSpacesRegExp = /\s+/g;
 
 function camelizedString(input: string): string {
   const text = removeDiacritics(input)
-    .replace(examplesRegExp, '')
-    .replace(charactersAndNumbersRegExp, '')
-    .replace(repeatingSpacesRegExp, ' ')
+    .replace(examplesRegExp, "")
+    .replace(charactersAndNumbersRegExp, "")
+    .replace(repeatingSpacesRegExp, " ")
     .trim()
-    .replace(/ /g, '_');
+    .replace(/ /g, "_");
   return camelize(text);
 }
 
@@ -153,7 +154,9 @@ const unusableStart = /^[\d_]/;
  */
 export function stepIdentifier(stepText: string): string | null {
   const candidate = camelizedString(parseRawStepLine(stepText)[0]);
-  return candidate.length > 0 && !unusableStart.test(candidate) ? candidate : null;
+  return candidate.length > 0 && !unusableStart.test(candidate)
+    ? candidate
+    : null;
 }
 
 /** The step file name without extension: "the app is running" -> "the_app_is_running". */
@@ -167,16 +170,18 @@ export function getStepFilename(stepText: string): string | null {
  * bool for true/false, num for parseable numbers, String for quoted,
  * dynamic otherwise.
  */
-export function genericParameterType(parameter: string): 'bool' | 'num' | 'String' | 'dynamic' {
-  if (parameter === 'true' || parameter === 'false') return 'bool';
-  if (parameter !== '' && !isNaN(Number(parameter))) return 'num';
+export function genericParameterType(
+  parameter: string,
+): "bool" | "num" | "String" | "dynamic" {
+  if (parameter === "true" || parameter === "false") return "bool";
+  if (parameter !== "" && !isNaN(Number(parameter))) return "num";
   if (
     (parameter.startsWith('"') && parameter.endsWith('"')) ||
     (parameter.startsWith("'") && parameter.endsWith("'"))
   ) {
-    return 'String';
+    return "String";
   }
-  return 'dynamic';
+  return "dynamic";
 }
 
 /** The step's <placeholder> names, in order, deduplicated. */
@@ -186,27 +191,55 @@ export function examplePlaceholders(stepLine: string): string[] {
   return [...names];
 }
 
+/**
+ * Mirrors GenericStep.content: same imports, same Usage comment, same
+ * parameter typing (bool/num/String/dynamic + <placeholder> dynamics).
+ */
+export function scaffoldStepDart(
+  rawLine: string,
+  hasDataTable: boolean,
+): string {
+  const parts = parseRawStepLine(rawLine);
+  const identifier = stepIdentifier(rawLine)!;
+  const params = parts.slice(1);
+  const placeholders = examplePlaceholders(rawLine);
+  const paramList = [
+    ...params.map((p, i) => `, ${genericParameterType(p)} param${i + 1}`),
+    ...placeholders.map((p) => `, dynamic ${p}`),
+    ...(hasDataTable ? [", bdd.DataTable dataTable"] : []),
+  ].join("");
+  const dataTableImport = hasDataTable
+    ? "import 'package:bdd_widget_test/data_table.dart' as bdd;\n"
+    : "";
+  return `${dataTableImport}import 'package:flutter_test/flutter_test.dart';
+
+/// Usage: ${rawLine}
+Future<void> ${identifier}(WidgetTester tester${paramList}) async {
+  throw UnimplementedError();
+}
+`;
+}
+
 /** The built-in steps of bdd_widget_test (predefinedSteps in step_generator.dart). */
 export const predefinedSteps: ReadonlySet<string> = new Set([
-  'theAppIsRunning',
-  'iDismissThePage',
-  'iDontSeeIcon',
-  'iDontSeeRichText',
-  'iDontSeeText',
-  'iDontSeeWidget',
-  'iEnterIntoInputField',
-  'iSeeDisabledElevatedButton',
-  'iSeeEnabledElevatedButton',
-  'iSeeExactlyWidgets',
-  'iSeeIcon',
-  'iSeeMultipleTexts',
-  'iSeeMultipleWidgets',
-  'iSeeRichText',
-  'iSeeText',
-  'iSeeWidget',
-  'iTapIcon',
-  'iTapText',
-  'iWait',
-  'theScreenMatchesGolden',
+  "theAppIsRunning",
+  "iDismissThePage",
+  "iDontSeeIcon",
+  "iDontSeeRichText",
+  "iDontSeeText",
+  "iDontSeeWidget",
+  "iEnterIntoInputField",
+  "iSeeDisabledElevatedButton",
+  "iSeeEnabledElevatedButton",
+  "iSeeExactlyWidgets",
+  "iSeeIcon",
+  "iSeeMultipleTexts",
+  "iSeeMultipleWidgets",
+  "iSeeRichText",
+  "iSeeText",
+  "iSeeWidget",
+  "iTapIcon",
+  "iTapText",
+  "iWait",
+  "theScreenMatchesGolden",
 ]);
-

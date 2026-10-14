@@ -1,0 +1,14 @@
+id = "bdd-widget-test"
+name = "BDD Widget Test"
+version = "0.1.1"
+schema_version = 1
+authors = ["Emre Sırmalı <lynicis@protonmail.com>"]
+description = "Go-to-definition, unresolved-step diagnostics and step-file scaffolding for Flutter bdd_widget_test .feature files"
+repository = "https://github.com/lynicis/bdd-widget-test-helper"
+
+[language_servers.bdd-widget-test]
+languages = ["Gherkin"]
+
+[grammars.gherkin]
+repository = "https://github.com/binhtddev/tree-sitter-gherkin"
+commit = "1a709aebeecbe81bd70dfd6ea784894844be1511"

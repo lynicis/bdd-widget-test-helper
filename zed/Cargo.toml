@@ -1,0 +1,17 @@
+[package]
+name = "bdd-widget-test"
+version = "0.1.1"
+edition = "2021"
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib"]
+path = "src/lib.rs"
+
+[dependencies]
+zed_extension_api = "0.7.0"
+
+[profile.release-wasm]
+inherits = "release"
+lto = true
+opt-level = 's'

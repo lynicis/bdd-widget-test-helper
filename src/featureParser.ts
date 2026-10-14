@@ -8,7 +8,7 @@
  * `# language: xx` header selects the dialect; keywords are matched with
  * their trailing space, `*` is a step in every language.
  */
-import dialects from './gherkin/dialects.json';
+import dialects from "./gherkin/dialects.json";
 
 export interface Dialect {
   name: string;
@@ -43,7 +43,7 @@ export interface ParsedStep {
   hasDataTable: boolean;
 }
 
-export type StepKeyword = 'given' | 'when' | 'then' | 'and' | 'but';
+export type StepKeyword = "given" | "when" | "then" | "and" | "but";
 
 const languagePattern = /^\s*#\s*language\s*:\s*([a-zA-Z\-_]+)\s*$/;
 
@@ -52,20 +52,23 @@ export function dialectFor(code: string | undefined): Dialect | undefined {
   return (dialects as Record<string, Dialect>)[code];
 }
 
-export function parseFeature(contents: string): { steps: ParsedStep[]; language?: string } {
+export function parseFeature(contents: string): {
+  steps: ParsedStep[];
+  language?: string;
+} {
   const lines = contents.split(/\r?\n/);
   const language = detectLanguage(lines);
-  const dialect = dialectFor(language) ?? dialectFor('en')!;
+  const dialect = dialectFor(language) ?? dialectFor("en")!;
   const stepKeywords: Array<[StepKeyword, string[]]> = [
-    ['given', dialect.given],
-    ['when', dialect.when],
-    ['then', dialect.then],
-    ['and', dialect.and],
-    ['but', dialect.but],
+    ["given", dialect.given],
+    ["when", dialect.when],
+    ["then", dialect.then],
+    ["and", dialect.and],
+    ["but", dialect.but],
   ];
   const steps: ParsedStep[] = [];
   let inDocString = false;
-  let docStringFence = '';
+  let docStringFence = "";
   let lastEffective: StepKeyword | undefined;
   const blockOpeners = [
     ...dialect.feature,
@@ -74,7 +77,7 @@ export function parseFeature(contents: string): { steps: ParsedStep[]; language?
     ...dialect.scenario,
     ...dialect.scenarioOutline,
     ...dialect.examples,
-    'After:',
+    "After:",
   ];
 
   for (let i = 0; i < lines.length; i++) {
@@ -85,7 +88,7 @@ export function parseFeature(contents: string): { steps: ParsedStep[]; language?
       if (line.trim().startsWith(docStringFence)) inDocString = false;
       continue;
     }
-    if (line.trim().startsWith('"""') || line.trim().startsWith('```')) {
+    if (line.trim().startsWith('"""') || line.trim().startsWith("```")) {
       inDocString = true;
       docStringFence = line.trim().slice(0, 3);
       continue;
@@ -129,16 +132,22 @@ function matchStep(
   previousEffective: StepKeyword | undefined,
 ): ParsedStep | undefined {
   const trimmed = line.trimStart();
-  if (trimmed.startsWith('#') || trimmed.startsWith('|') || trimmed.startsWith('@')) return undefined;
+  if (
+    trimmed.startsWith("#") ||
+    trimmed.startsWith("|") ||
+    trimmed.startsWith("@")
+  )
+    return undefined;
   const indent = line.length - trimmed.length;
 
   // Longest matching keyword wins, so `Eğer ki` beats `Eğer`.
   let best: { keyword: StepKeyword; spelling: string } | undefined;
   for (const [keyword, spellings] of keywords) {
     for (const spelling of spellings) {
-      const withSpace = spelling.endsWith(' ') ? spelling : spelling + ' ';
+      const withSpace = spelling.endsWith(" ") ? spelling : spelling + " ";
       if (trimmed.startsWith(withSpace)) {
-        if (!best || withSpace.length > best.spelling.length) best = { keyword, spelling: withSpace };
+        if (!best || withSpace.length > best.spelling.length)
+          best = { keyword, spelling: withSpace };
       }
     }
   }
@@ -147,10 +156,12 @@ function matchStep(
   const rest = trimmed.slice(best.spelling.length);
   const text = rest.trim();
   if (text.length === 0) return undefined;
-  const textStart = indent + best.spelling.length + (rest.length - rest.trimStart().length);
+  const textStart =
+    indent + best.spelling.length + (rest.length - rest.trimStart().length);
   // And/But/* resolve to the effective keyword of the previous step.
   const effective =
-    (best.keyword === 'and' || best.keyword === 'but') && previousEffective !== undefined
+    (best.keyword === "and" || best.keyword === "but") &&
+    previousEffective !== undefined
       ? previousEffective
       : best.keyword;
   return {
@@ -164,14 +175,17 @@ function matchStep(
   };
 }
 
-
 /** Second pass: mark steps whose next non-empty line is a table row. */
-export function withDataTables(steps: ParsedStep[], contents: string): ParsedStep[] {
+export function withDataTables(
+  steps: ParsedStep[],
+  contents: string,
+): ParsedStep[] {
   const lines = contents.split(/\r?\n/);
   return steps.map((s) => {
     let j = s.line + 1;
-    while (j < lines.length && lines[j].trim() === '') j++;
-    const hasDataTable = j < lines.length && lines[j].trimStart().startsWith('|');
+    while (j < lines.length && lines[j].trim() === "") j++;
+    const hasDataTable =
+      j < lines.length && lines[j].trimStart().startsWith("|");
     return { ...s, hasDataTable };
   });
 }

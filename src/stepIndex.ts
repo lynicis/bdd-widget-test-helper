@@ -6,10 +6,16 @@
  * getStepFilename produces; value: absolute paths (a name may exist in
  * several folders; nearest-to-feature wins at lookup time).
  */
-import * as fs from 'fs';
-import * as path from 'path';
-import * as vscode from 'vscode';
-import { BddOptions, findOptions, resolvePackageUri, stepFolderBaseDir } from './bddOptions';
+import * as fs from "fs";
+import * as path from "path";
+import {
+  BddOptions,
+  defaultOptions,
+  findOptions,
+  resolvePackageUri,
+  stepFolderBaseDir,
+} from "./bddOptions";
+import { camelize } from "./naming";
 
 export interface StepIndexEntry {
   /** Absolute file path of the step .dart file. */
@@ -18,26 +24,52 @@ export interface StepIndexEntry {
   functionLine?: number;
 }
 
+/** Host-provided file watching for a step folder; returns a dispose function. */
+export type StepFolderWatcher = (
+  stepFolder: string,
+  handlers: {
+    add: (filePath: string) => void;
+    remove: (filePath: string) => void;
+  },
+) => () => void;
+
 export class StepIndex {
   private index = new Map<string, StepIndexEntry[]>();
-  private watchers: vscode.FileSystemWatcher[] = [];
+  private disposers: Array<() => void> = [];
   private indexedRoots = new Set<string>();
-  private readonly onDidChangeEmitter = new vscode.EventEmitter<void>();
-  readonly onDidChange = this.onDidChangeEmitter.event;
+  private listeners = new Set<() => void>();
 
-  constructor(private workspaceRoot: string | undefined) {}
+  constructor(
+    private workspaceRoot: string | undefined,
+    private getDefaults: () => BddOptions = () => defaultOptions,
+    private watchFolder?: StepFolderWatcher,
+  ) {}
+
+  readonly onDidChange = (cb: () => void): (() => void) => {
+    this.listeners.add(cb);
+    return () => this.listeners.delete(cb);
+  };
+
+  private fire(): void {
+    for (const cb of [...this.listeners]) cb();
+  }
 
   /** Looks up a step by its filename stem (e.g. `i_see_text`). */
   lookup(fileStem: string, featurePath: string): StepIndexEntry | undefined {
-    const entries = (this.index.get(`${fileStem}.dart`) ?? []).filter((e) => fs.existsSync(e.filePath));
+    const entries = (this.index.get(`${fileStem}.dart`) ?? []).filter((e) =>
+      fs.existsSync(e.filePath),
+    );
     if (entries.length === 0) return undefined;
     // Nearest to the feature file wins (mirrors getExistingStepSubfolders
     // resolving the first folder hit relative to the feature dir).
     let best = entries[0];
     let bestDist = Infinity;
     for (const e of entries) {
-      const d = path.relative(path.dirname(featurePath), path.dirname(e.filePath));
-      const dist = d.split(path.sep).filter((p) => p !== '.').length;
+      const d = path.relative(
+        path.dirname(featurePath),
+        path.dirname(e.filePath),
+      );
+      const dist = d.split(path.sep).filter((p) => p !== ".").length;
       if (dist < bestDist) {
         bestDist = dist;
         best = e;
@@ -48,7 +80,11 @@ export class StepIndex {
 
   /** Indexes the step folder(s) for a feature file, if not done yet. */
   ensureIndexed(featurePath: string): void {
-    const options = findOptions(featurePath, this.workspaceRoot);
+    const options = findOptions(
+      featurePath,
+      this.workspaceRoot,
+      this.getDefaults,
+    );
     const baseDir = stepFolderBaseDir(featurePath, options, this.workspaceRoot);
     const stepFolder = path.resolve(baseDir, options.stepFolderName);
     const rootKey = stepFolder;
@@ -56,13 +92,13 @@ export class StepIndex {
     this.indexFolder(stepFolder);
     this.indexedRoots.add(rootKey);
     this.watch(stepFolder);
-    this.onDidChangeEmitter.fire();
+    this.fire();
   }
 
   /** Adds a single file to the index (used after scaffolding a new step). */
   add(filePath: string): void {
     this.addFile(filePath);
-    this.onDidChangeEmitter.fire();
+    this.fire();
   }
 
   /** Full rebuild of everything indexed so far. */
@@ -74,25 +110,44 @@ export class StepIndex {
       this.indexedRoots.add(r);
       this.indexFolder(r);
     }
-    this.onDidChangeEmitter.fire();
+    this.fire();
   }
 
   /** Resolves where a NEW step file for a feature would be created. */
-  targetPathForNewStep(featurePath: string): { folder: string; options: BddOptions } {
-    const options = findOptions(featurePath, this.workspaceRoot);
+  targetPathForNewStep(featurePath: string): {
+    folder: string;
+    options: BddOptions;
+  } {
+    const options = findOptions(
+      featurePath,
+      this.workspaceRoot,
+      this.getDefaults,
+    );
     const baseDir = stepFolderBaseDir(featurePath, options, this.workspaceRoot);
     return { folder: path.resolve(baseDir, options.stepFolderName), options };
   }
 
   /** An external step (package: uri) that matches the file name, if any. */
-  findExternalStep(fileStem: string, featurePath: string): StepIndexEntry | undefined {
-    const options = findOptions(featurePath, this.workspaceRoot);
+  findExternalStep(
+    fileStem: string,
+    featurePath: string,
+  ): StepIndexEntry | undefined {
+    const options = findOptions(
+      featurePath,
+      this.workspaceRoot,
+      this.getDefaults,
+    );
     const file = `${fileStem}.dart`;
-    const external = options.externalSteps.find((l) => l.endsWith(file) || l.includes(`/${file}`));
+    const external = options.externalSteps.find(
+      (l) => l.endsWith(file) || l.includes(`/${file}`),
+    );
     if (!external) return undefined;
     const resolved = resolvePackageUri(external, this.workspaceRoot);
     if (resolved && fs.existsSync(resolved)) {
-      return { filePath: resolved, functionLine: findFunctionLine(resolved, stemToIdentifier(fileStem)) };
+      return {
+        filePath: resolved,
+        functionLine: findFunctionLine(resolved, camelize(fileStem)),
+      };
     }
     return undefined;
   }
@@ -104,11 +159,17 @@ export class StepIndex {
   }
 
   private addFile(filePath: string): void {
-    if (!filePath.endsWith('.dart')) return;
+    if (!filePath.endsWith(".dart")) return;
     const base = path.basename(filePath);
     const list = this.index.get(base) ?? [];
     if (!list.some((e) => e.filePath === filePath)) {
-      list.push({ filePath, functionLine: findFunctionLine(filePath, stemToIdentifier(base.replace(/\.dart$/, ''))) });
+      list.push({
+        filePath,
+        functionLine: findFunctionLine(
+          filePath,
+          camelize(base.replace(/\.dart$/, "")),
+        ),
+      });
       this.index.set(base, list);
     }
   }
@@ -123,28 +184,24 @@ export class StepIndex {
   }
 
   private watch(stepFolder: string): void {
-    const relPattern = new vscode.RelativePattern(vscode.Uri.file(path.dirname(stepFolder)), `${path.basename(stepFolder)}/**/*.dart`);
-    const watcher = vscode.workspace.createFileSystemWatcher(relPattern);
-    watcher.onDidCreate((uri) => {
-      this.addFile(uri.fsPath);
-      this.onDidChangeEmitter.fire();
+    if (!this.watchFolder) return;
+    const dispose = this.watchFolder(stepFolder, {
+      add: (p) => {
+        this.addFile(p);
+        this.fire();
+      },
+      remove: (p) => {
+        this.removeFile(p);
+        this.fire();
+      },
     });
-    watcher.onDidChange((uri) => {
-      this.removeFile(uri.fsPath);
-      this.addFile(uri.fsPath);
-      this.onDidChangeEmitter.fire();
-    });
-    watcher.onDidDelete((uri) => {
-      this.removeFile(uri.fsPath);
-      this.onDidChangeEmitter.fire();
-    });
-    this.watchers.push(watcher);
+    this.disposers.push(dispose);
   }
 
   dispose(): void {
-    for (const w of this.watchers) w.dispose();
-    this.watchers = [];
-    this.onDidChangeEmitter.dispose();
+    for (const d of this.disposers) d();
+    this.disposers = [];
+    this.listeners.clear();
   }
 }
 
@@ -162,17 +219,17 @@ function* walk(dir: string): Generator<string> {
   }
 }
 
-/** i_see_text.dart -> iSeeText */
-function stemToIdentifier(stem: string): string {
-  return stem.replace(/(^|_)(\w)/g, (_m, _a, c: string) => c.toUpperCase());
-}
-
 /** Finds `Future<void> <identifier>(` in a step file. */
-export function findFunctionLine(filePath: string, identifier: string): number | undefined {
+export function findFunctionLine(
+  filePath: string,
+  identifier: string,
+): number | undefined {
   try {
-    const content = fs.readFileSync(filePath, 'utf8');
+    const content = fs.readFileSync(filePath, "utf8");
     const lines = content.split(/\r?\n/);
-    const re = new RegExp(`Future<\\s*void\\s*>\\s*${escapeRegExp(identifier)}\\s*\\(`);
+    const re = new RegExp(
+      `Future<\\s*void\\s*>\\s*${escapeRegExp(identifier)}\\s*\\(`,
+    );
     for (let i = 0; i < lines.length; i++) {
       if (re.test(lines[i])) return i + 1;
     }
@@ -183,5 +240,5 @@ export function findFunctionLine(filePath: string, identifier: string): number |
 }
 
 function escapeRegExp(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

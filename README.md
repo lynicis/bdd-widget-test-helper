@@ -25,6 +25,22 @@ and [Open VSX](https://open-vsx.org/extension/lynicis/bdd-widget-test-helper).
 The extension activates for `.feature` files and needs no Dart tooling at
 runtime.
 
+## Zed
+
+The same helper is available for the [Zed](https://zed.dev) editor as a
+sub-extension in [`zed/`](zed/README.md). Zed has no direct extension API for
+diagnostics, go-to-definition or quick-fixes, so it is delivered over LSP by a
+zero-dependency Node server (`zed/server/server.cjs`) that reuses this repo's
+TypeScript core — the `bdd_widget_test` naming/resolution contract stays
+single-sourced.
+
+Install (dev): `npm run build:zed`, then in Zed **Extensions → Install Dev
+Extension → `zed/`**. Settings go under `lsp.bdd-widget-test.settings` with the
+same keys as `bddWidgetTestHelper.*` (`stepFolderName`, `relativeToTestFolder`,
+`externalSteps`, `showUnresolvedStepWarnings`). See [`zed/README.md`](zed/README.md)
+for details. Zed exposes no document links, so Ctrl+Click underline is absent
+there but go-to-definition covers the same navigation.
+
 ## Features
 
 - **Go to definition (F12 / Ctrl+Click)** on every step line
@@ -52,6 +68,11 @@ runtime.
   offers to scaffold the missing step file with the exact content
   `bdd_widget_test` would generate.
 - **Diagnostics** — unresolved steps are reported as warnings.
+- **File icon** — `.feature` files show a cucumber icon in the explorer and
+  editor tabs. It appears under icon themes that enable language icons and
+  have no `.feature` icon of their own — the default Seti theme and most
+  third-party themes. Uniform-icon themes (Minimal) and themes that switch
+  language icons off (VS Code Modern Icons) show their own generic icon.
 - **Step index cache** — step folders are indexed once and updated
   incrementally through a `FileSystemWatcher`; nothing is rescanned per
   keystroke.
@@ -65,7 +86,7 @@ Mirrors `bdd_widget_test`'s resolution order:
 
 1. The built-in step set shipped with `bdd_widget_test` — checked first, so
    built-in steps always resolve as built-ins and never need a file (a local
-   `i_see_text.dart` is therefore *not* used for `I see {..} text`).
+   `i_see_text.dart` is therefore _not_ used for `I see {..} text`).
 2. `step/` folder next to the feature file (or the folder configured via
    `stepFolderName`, relative to the feature when it starts with `./` or
    `../`, otherwise relative to the test folder per `relativeToTestFolder`),
@@ -78,12 +99,12 @@ feature file) and `build.yaml`
 (`targets → … → builders → bdd_widget_test → options`), falling back to the
 extension settings:
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `bddWidgetTestHelper.stepFolderName` | `./step` | Step folder location |
-| `bddWidgetTestHelper.relativeToTestFolder` | `true` | Interpret non-`./` folders relative to `test/` |
-| `bddWidgetTestHelper.externalSteps` | `[]` | Extra `package:` step locations |
-| `bddWidgetTestHelper.showUnresolvedStepWarnings` | `true` | Warn on unresolved steps |
+| Setting                                          | Default  | Meaning                                        |
+| ------------------------------------------------ | -------- | ---------------------------------------------- |
+| `bddWidgetTestHelper.stepFolderName`             | `./step` | Step folder location                           |
+| `bddWidgetTestHelper.relativeToTestFolder`       | `true`   | Interpret non-`./` folders relative to `test/` |
+| `bddWidgetTestHelper.externalSteps`              | `[]`     | Extra `package:` step locations                |
+| `bddWidgetTestHelper.showUnresolvedStepWarnings` | `true`   | Warn on unresolved steps                       |
 
 Commands: **BDD: Create step file** (also available as quick-fix),
 **BDD: Rebuild step index**.
@@ -121,6 +142,7 @@ generates.
 npm install
 npm run compile        # tsc --noEmit type-check + esbuild bundle → dist/
 npm run check-types    # tsc --noEmit only
+npm run build:zed      # type-check + bundle the Zed LSP server → zed/server/server.cjs
 npm run lint           # ESLint (flat config)
 npm run test:unit      # vitest unit tests (naming, parser, yaml)
 npm test               # compile + compile tests + integration tests in VS Code
@@ -156,12 +178,21 @@ src/
   test/unit/              vitest unit tests
   test/integration/       @vscode/test-electron integration tests
   test/fixtures/          sample feature project used by tests
+zed/                          Zed editor extension (see zed/README.md)
+  extension.toml               Zed manifest (language + grammar + LSP)
+  src/lib.rs                   Rust shim that launches the embedded Node server
+  server/src/lsp.ts            LSP server source (uses the shared src/ core)
+  server/server.cjs            GENERATED bundle — do not hand-edit (npm run build:zed)
+  languages/gherkin/           Gherkin language config + tree-sitter queries
+  icon.png                     Zed extension icon
 syntaxes/feature.tmLanguage.json   TextMate grammar
 language-configuration.json        .feature editor behaviour (comments, brackets)
 esbuild.js                         bundler (src/extension.ts → dist/extension.js)
+esbuild-zed.js                     bundler (zed/server/src/lsp.ts → zed/server/server.cjs)
 eslint.config.mts                  ESLint flat config
 test/runTests.js                   @vscode/test-electron launcher
 media/icon.png                     extension icon
+media/feature-icon.svg             cucumber file icon for .feature files
 .github/workflows/publish.yml      CI: test, then publish to both marketplaces
 ```
 
@@ -171,12 +202,19 @@ media/icon.png                     extension icon
 `string_utils.dart` + `step_generator.dart` (underscore/camelize/parseRawStepLine/
 stepIdentifier, `genericParameterType`, `examplePlaceholders`,
 `predefinedSteps`) and the `diacritic` package's replacement map;
-`src/codeActions.ts#scaffoldStepDart` mirrors `GenericStep.content` (imports,
+`src/naming.ts#scaffoldStepDart` mirrors `GenericStep.content` (imports,
 `Usage` comment, parameter typing). The unit tests assert the upstream
 package's own fixtures, e.g.
 `'los diacríticos son útil'` → `los_diacriticos_son_util`,
 `"I see {'0'} text"` → `i_see_text`, `'there are <start> cucumbers'` →
 `thereAreCucumbers`, `'2FA is on'` → rejected.
+
+## Contributing
+
+Contributions are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) covers the dev
+setup, the `bdd_widget_test` port-fidelity rule, and the PR checklist.
+[SECURITY.md](SECURITY.md) explains how to report a vulnerability privately.
+This project follows the [Contributor Covenant](CODE_OF_CONDUCT.md).
 
 ## License
 

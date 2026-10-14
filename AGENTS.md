@@ -19,26 +19,29 @@ Host constraint: runs on both VS Code and VSCodium — use only the open-source 
         ├─ existing/external → StepIndex.lookup / findExternalStep
         │     └─ StepIndex ── uses bddOptions (findOptions / stepFolderBaseDir / resolvePackageUri)
         │                        └─ bddOptions ── uses simpleYaml.parseSimpleYaml
-        └─ missing → targetPathForNewStep → codeActions.createStepFile / scaffoldStepDart
+        └─ missing → targetPathForNewStep → naming.scaffoldStepDart (VS Code: codeActions.createStepFile)
 Consumers: providers.ts (Definition + DocumentLink) · codeActions.ts (CodeAction, diagnostics, command)
-Wiring: extension.ts (activate, subscriptions, debounced index.onDidChange)
+  · zed/server/src/lsp.ts (Zed: diagnostics, definition, codeAction over LSP — same core)
+Wiring: extension.ts (activate, subscriptions, debounced index.onDidChange) · zed/src/lib.rs (launches the server)
 ```
 
-- `extension.ts` builds one shared `StepIndex` rooted at the first workspace folder, stashes it in the `StepIndexHolder` singleton (`codeActions.ts`), registers providers/commands against `{ language: 'feature', scheme: 'file' }`, and recomputes diagnostics on editor change, text change, and `index.onDidChange` (200 ms debounce).
+- `extension.ts` builds one shared `StepIndex` rooted at the first workspace folder (constructed with injected `getDefaults` + `watchFolder` glue), registers providers/commands against `{ language: 'feature', scheme: 'file' }`, and recomputes diagnostics on editor change, text change, and `index.onDidChange` (200 ms debounce).
 - Resolution order for a step: `step/` folder next to the feature file (recursive, nearest wins) → `externalSteps` `package:` URIs via `.dart_tool/package_config.json` → built-in set.
 - Options precedence: `bdd_options.yaml` (nearest, walking up to workspace root) → `build.yaml` (`builders → bdd_widget_test → options`) → VS Code settings (`bddWidgetTestHelper.*`).
 
 ## Key Directories
 
-| Path | Purpose |
-|---|---|
-| `src/` | Extension source; `extension.ts` is the entry point |
-| `src/gherkin/` | Bundled dialect data (`dialects.json`) — generated, do not hand-edit |
-| `src/test/unit/` | Vitest unit tests (`*.test.ts`) |
-| `src/test/integration/` | VS Code integration test (compiled to `out/`) |
-| `src/test/fixtures/test/` | Worked `.feature` + `step/*.dart` examples; used as the integration-test workspace |
-| `test/` | `runTests.js` integration launcher only |
-| `syntaxes/` | TextMate grammar for `.feature` highlighting |
+| Path                      | Purpose                                                                                                                                                                  |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `src/`                    | Extension source; `extension.ts` is the entry point                                                                                                                      |
+| `src/gherkin/`            | Bundled dialect data (`dialects.json`) — generated, do not hand-edit                                                                                                     |
+| `src/test/unit/`          | Vitest unit tests (`*.test.ts`)                                                                                                                                          |
+| `src/test/integration/`   | VS Code integration test (compiled to `out/`)                                                                                                                            |
+| `src/test/fixtures/test/` | Worked `.feature` + `step/*.dart` examples; used as the integration-test workspace                                                                                       |
+| `zed/`                    | Zed editor extension: Rust shim (`src/lib.rs`), manifest (`extension.toml`), tree-sitter queries (`languages/gherkin/`), and the LSP server source (`server/src/lsp.ts`) |
+| `zed/server/server.cjs`   | GENERATED LSP bundle (committed) — build with `npm run build:zed`, do not hand-edit                                                                                      |
+| `test/`                   | `runTests.js` integration launcher only                                                                                                                                  |
+| `syntaxes/`               | TextMate grammar for `.feature` highlighting                                                                                                                             |
 
 ## Development Commands
 
@@ -48,6 +51,7 @@ npm run compile           # tsc --noEmit type-check + esbuild bundle → dist/ex
 npm run watch             # parallel esbuild --watch + tsc --watch
 npm run lint              # ESLint (flat config eslint.config.mts: JS + TS + JSON + Markdown)
 npm run check-types       # tsc --noEmit only (tsconfig.json, excludes src/test)
+npm run build:zed         # type-check + esbuild bundle → zed/server/server.cjs (Zed LSP server)
 npm run test:unit         # vitest unit tests (Node, no VS Code)
 npx tsc --project tsconfig.test.json   # compile integration tests → out/ (required before runTests.js)
 node test/runTests.js     # integration tests (@vscode/test-electron; opens src/test/fixtures)
@@ -71,28 +75,29 @@ npm run compile && npx tsc --project tsconfig.test.json && npx vitest run && xvf
 - **Dependency injection**: constructor parameter properties (`constructor(private index: StepIndex)`) — no framework, no single-impl interfaces.
 - **Discriminated unions** with a `kind` field for state machines (`StepResolution`: `builtin | existing | external | missing | unnamed`).
 - **Error handling**: defensive and silent — `try { … } catch { /* keep defaults */ }`, `null` returns, unreadable dirs skipped; user-facing failures via `vscode.window.showWarningMessage`/`showInformationMessage`. No custom Error classes.
-- **Async**: providers are synchronous; file I/O uses sync `fs` (`readFileSync`, `existsSync`, `mkdirSync`). Only `createStepFile` is `async`. Events via `vscode.EventEmitter` (`StepIndex.onDidChange`).
-- **State**: class-encapsulated `Map`/`Set` with `FileSystemWatcher`-driven updates; one module-global singleton (`StepIndexHolder` in `codeActions.ts`) set at activation.
-- **vscode-free pure modules**: logic needing unit tests is kept free of the `vscode` import (`simpleYaml.ts`, exposed to tests via `src/bddOptionsTestExport.ts`). Never mock `vscode` — extract instead.
-- **Generated files — do not hand-edit**: `src/diacritics.generated.ts`, `src/gherkin/dialects.json`.
+- **Async**: providers are synchronous; file I/O uses sync `fs` (`readFileSync`, `existsSync`, `mkdirSync`). Only `createStepFile` is `async`. Events via a plain listener set — `StepIndex.onDidChange(cb)` returns an unsubscribe function (the VS Code host wraps it in a `Disposable`).
+- **State**: class-encapsulated `Map`/`Set` updated through an injected file watcher (`StepFolderWatcher`); no module-global singletons.
+- **vscode-free pure modules**: the whole core (`naming.ts`, `bddOptions.ts`, `stepIndex.ts`, `stepResolver.ts`, `featureParser.ts`, `simpleYaml.ts`) never imports `vscode`, so the same code backs the VS Code extension and the Zed LSP server (`zed/server/src/lsp.ts`). `stepIndex` takes an injected `StepFolderWatcher` + `getDefaults`, and `stepDefinitionLocation`/`unresolvedSteps` are pure — inject host glue (`extension.ts` for VS Code, `lsp.ts` for Zed) instead of importing `vscode`. Never mock `vscode` — extract instead.
+- **Generated files — do not hand-edit**: `src/diacritics.generated.ts`, `src/gherkin/dialects.json`, `zed/server/server.cjs` (build with `npm run build:zed`).
 - **Known dead exports** (candidates for removal, not reuse): `featureParser.readFeatureFile`, `stepResolver.stepTextRange`; `.vscode-test.js` is unused by the current runner.
 
 ## Important Files
 
-| File | Role |
-|---|---|
-| `src/extension.ts` | Entry point; activation, provider/command registration, diagnostics wiring |
-| `src/featureParser.ts` | Dialect-aware Gherkin parser (`parseFeature`, `withDataTables`) |
-| `src/naming.ts` | Faithful port of `bdd_widget_test` naming — the core of the contract |
-| `src/stepResolver.ts` | Step → `StepResolution` chain |
-| `src/stepIndex.ts` | Cached step-file index with `FileSystemWatcher` refresh |
-| `src/bddOptions.ts` | `bdd_options.yaml` / `build.yaml` / settings resolution |
-| `src/providers.ts` | `BddDefinitionProvider`, `BddDocumentLinkProvider` |
-| `src/codeActions.ts` | Quick-fix, `createStepFile` command, `scaffoldStepDart`, diagnostics |
-| `package.json` | Manifest + all scripts; commands `bddWidgetTest.createStepFile` / `bddWidgetTest.rebuildStepIndex`; settings under `bddWidgetTestHelper.*` |
-| `esbuild.js` | Bundler (entry `src/extension.ts` → `dist/extension.js`) |
-| `test/runTests.js` | Integration launcher; hardcodes `out/test/integration/extension.test.js` |
-| `README.md` | Doc of record and fidelity contract against `bdd_widget_test` |
+| File                   | Role                                                                                                                                       |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `src/extension.ts`     | Entry point; activation, provider/command registration, diagnostics wiring                                                                 |
+| `src/featureParser.ts` | Dialect-aware Gherkin parser (`parseFeature`, `withDataTables`)                                                                            |
+| `src/naming.ts`        | Faithful port of `bdd_widget_test` naming + `scaffoldStepDart` — the core of the contract                                                  |
+| `src/stepResolver.ts`  | Step → `StepResolution` chain + `stepDefinitionLocation` / `unresolvedSteps` (shared by both hosts)                                        |
+| `src/stepIndex.ts`     | Cached step-file index; updates via an injected `StepFolderWatcher`                                                                        |
+| `src/bddOptions.ts`    | `bdd_options.yaml` / `build.yaml` / settings resolution                                                                                    |
+| `src/providers.ts`     | `BddDefinitionProvider`, `BddDocumentLinkProvider`                                                                                         |
+| `src/codeActions.ts`   | Quick-fix, `createStepFile` command, diagnostics (over `stepResolver.unresolvedSteps`)                                                     |
+| `package.json`         | Manifest + all scripts; commands `bddWidgetTest.createStepFile` / `bddWidgetTest.rebuildStepIndex`; settings under `bddWidgetTestHelper.*` |
+| `esbuild.js`           | Bundler (entry `src/extension.ts` → `dist/extension.js`)                                                                                   |
+| `esbuild-zed.js`       | Bundler (entry `zed/server/src/lsp.ts` → `zed/server/server.cjs`); no `external: ['vscode']`, so a leaked import fails the build           |
+| `test/runTests.js`     | Integration launcher; hardcodes `out/test/integration/extension.test.js`                                                                   |
+| `README.md`            | Doc of record and fidelity contract against `bdd_widget_test`                                                                              |
 
 ## Runtime/Tooling Preferences
 
@@ -103,6 +108,6 @@ npm run compile && npx tsc --project tsconfig.test.json && npx vitest run && xvf
 
 ## Testing & QA
 
-- **Unit** (Vitest 1.6, plain Node): `src/test/unit/*.test.ts` — `featureParser`, `naming`, `bddOptions`. Run: `npm run test:unit`. These assert upstream `bdd_widget_test` fixtures (e.g. `'los diacríticos son útil'` → `los_diacriticos_son_util`, `'there are <start> cucumbers'` → `thereAreCucumbers`, `'2FA is on'` → rejected). Naming changes MUST keep these passing — they encode the parity contract.
+- **Unit** (Vitest, plain Node): `src/test/unit/*.test.ts` — `featureParser`, `naming`, `bddOptions`, and `zedServer` (drives the built `zed/server/server.cjs` over stdio; run `npm run build:zed` first, else it skips). Run: `npm run test:unit`. These assert upstream `bdd_widget_test` fixtures (e.g. `'los diacríticos son útil'` → `los_diacriticos_son_util`, `'there are <start> cucumbers'` → `thereAreCucumbers`, `'2FA is on'` → rejected). Naming changes MUST keep these passing — they encode the parity contract.
 - **Integration** (`@vscode/test-electron` + Node `assert`, no mocha runtime): `src/test/integration/extension.test.ts`, compiled with `tsconfig.test.json` → `out/`, launched by `test/runTests.js` with `src/test/fixtures` as the workspace. Exercises activation, definition provider, document links, and the `createStepFile` command. The extension id `lynicis.bdd-widget-test-helper` is hardcoded there — must match `package.json`.
 - Add or update tests for behavior changes; run `npm run lint`, `npm run check-types`, `npm run test:unit`, and the integration suite before merging.

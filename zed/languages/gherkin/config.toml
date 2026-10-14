@@ -1,0 +1,5 @@
+name = "Gherkin"
+grammar = "gherkin"
+path_suffixes = ["feature"]
+line_comments = ["#"]
+tab_size = 2

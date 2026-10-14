@@ -11,8 +11,21 @@ and this project adheres to
 
 ### Added
 
+- **Zed extension** (`zed/`): unresolved-step diagnostics, go-to-definition
+  and the "Create step file" quick-fix for `.feature` files in
+  [Zed](https://zed.dev), served over LSP by a bundled zero-dependency Node
+  server that reuses the same TypeScript core. Zed has no document-link API, so
+  navigation there is go-to-definition only. See `zed/README.md`.
+- File icon (cucumber) for `.feature` files in the explorer and editor tabs.
 - `CHANGELOG.md`, and `.vscodeignore` now keeps it in the VSIX so the
   Marketplace renders this file.
+
+### Fixed
+
+- Go to definition / document links landed on line 1 of the step file instead
+  of the `Future<void>` line: the function lookup built a PascalCase identifier
+  (`I_tap_text` → `ITapText`) that never matched the generated lowerCamelCase
+  name. It now uses the same `camelize` mapping as the generator.
 
 ### Documentation
 

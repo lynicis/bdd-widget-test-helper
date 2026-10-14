@@ -104,10 +104,7 @@
       "beginCaptures": {
         "1": { "name": "keyword.control.examples.feature" }
       },
-      "patterns": [
-        { "include": "#comment" },
-        { "include": "#table" }
-      ]
+      "patterns": [{ "include": "#comment" }, { "include": "#table" }]
     },
     "after": {
       "begin": "^\\s*(After):",

@@ -1,7 +1,7 @@
 {
   "name": "bdd-widget-test-helper",
   "displayName": "BDD Widget Test Helper",
-  "description": "Go to definition, quick-fix scaffolding and diagnostics for Flutter bdd_widget_test .feature files. Works with VS Code and VSCodium.",
+  "description": "Flutter BDD testing tools for VS Code, VSCodium and Zed: Go-to-Definition, step scaffolding, and unresolved-step diagnostics for Gherkin .feature files — offline, all 80 dialects.",
   "version": "0.1.1",
   "publisher": "lynicis",
   "license": "MIT",
@@ -44,7 +44,11 @@
         "extensions": [
           ".feature"
         ],
-        "configuration": "./language-configuration.json"
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./media/feature-icon.svg",
+          "dark": "./media/feature-icon.svg"
+        }
       }
     ],
     "grammars": [
@@ -98,6 +102,7 @@
   "scripts": {
     "vscode:prepublish": "npm run package",
     "compile": "npm run check-types && node esbuild.js",
+    "build:zed": "tsc --noEmit --project zed/server/tsconfig.json && node esbuild-zed.js",
     "watch": "npm-run-all -p watch:*",
     "watch:esbuild": "node esbuild.js --watch",
     "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
@@ -118,9 +123,12 @@
     "@vscode/vsce": "^4.0.0",
     "esbuild": "^0.28.2",
     "eslint": "^10.12.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.7",
     "globals": "^17.13.0",
     "jiti": "^2.7.0",
     "npm-run-all": "^4.1.5",
+    "prettier": "3.9.10",
     "typescript": "^5.4.5",
     "typescript-eslint": "^8.71.2",
     "vitest": "^5.0.4"
