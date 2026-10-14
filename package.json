@@ -2,7 +2,7 @@
   "name": "bdd-widget-test-helper",
   "displayName": "BDD Widget Test Helper",
   "description": "Flutter BDD testing tools for VS Code, VSCodium and Zed: Go-to-Definition, step scaffolding, and unresolved-step diagnostics for Gherkin .feature files — offline, all 80 dialects.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "publisher": "lynicis",
   "license": "MIT",
   "icon": "media/icon.png",
