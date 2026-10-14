@@ -25,11 +25,16 @@ jobs:
           xvfb-run -a node test/runTests.js
 
       - name: Publish to VS Code Marketplace
-        run: npx vsce publish
+        run: npx vsce publish --skip-duplicate
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
+      - name: Create Open VSX namespace (no-op if it exists)
+        run: npx --yes ovsx create-namespace lynicis || [ "$(curl -s -o /dev/null -w '%{http_code}' https://open-vsx.org/api/lynicis)" = "200" ]
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+
       - name: Publish to Open VSX
-        run: npx ovsx publish
+        run: npx --yes ovsx publish --skip-duplicate
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}

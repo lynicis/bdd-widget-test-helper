@@ -2,7 +2,7 @@
   "name": "bdd-widget-test-helper",
   "displayName": "BDD Widget Test Helper",
   "description": "Go to definition, quick-fix scaffolding and diagnostics for Flutter bdd_widget_test .feature files. Works with VS Code and VSCodium.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "lynicis",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/lynicis/vscode-bdd-dart"
+    "url": "https://github.com/lynicis/bdd-widget-test-helper"
   },
   "engines": {
     "vscode": "^1.85.0"
@@ -112,17 +112,25 @@
     "@eslint/js": "^10.0.1",
     "@eslint/json": "^2.1.1",
     "@eslint/markdown": "^8.0.3",
-    "@types/node": "20.x",
+    "@types/node": "^24.19.2",
     "@types/vscode": "^1.85.0",
     "@vscode/test-electron": "^2.3.9",
-    "@vscode/vsce": "^3.1.0",
-    "esbuild": "^0.21.5",
+    "@vscode/vsce": "^4.0.0",
+    "esbuild": "^0.28.2",
     "eslint": "^10.12.0",
     "globals": "^17.13.0",
     "jiti": "^2.7.0",
     "npm-run-all": "^4.1.5",
     "typescript": "^5.4.5",
     "typescript-eslint": "^8.71.2",
-    "vitest": "^1.6.0"
+    "vitest": "^5.0.4"
+  },
+  "overrides": {
+    "katex": "^0.19.0"
+  },
+  "allowScripts": {
+    "@vscode/vsce-sign@2.1.0": true,
+    "esbuild@0.28.2": true,
+    "fsevents@2.3.3": true
   }
 }

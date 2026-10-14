@@ -1,10 +1,6 @@
-node_modules/**
-out/**
-src/test/**
-test/**
-.vscode-test/**
-dist/**/*.map
-*.vsix
-tsconfig*.json
-vitest.config.ts
-.gitignore
+**
+!dist/*.js
+!media/**
+!syntaxes/**
+!language-configuration.json
+!LICENSE
