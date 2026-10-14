@@ -9,8 +9,21 @@ from any Gherkin step in a `.feature` file straight to the Dart step
 definition — and scaffold the ones that don't exist yet.
 
 Works in both **VS Code** and **VSCodium** (only the open-source `vscode` API,
-no proprietary Microsoft services), so it is publishable to
-[Open VSX](https://open-vsx.org/).
+no proprietary Microsoft services), and is published to both the
+[VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=lynicis.bdd-widget-test-helper)
+and [Open VSX](https://open-vsx.org/extension/lynicis/bdd-widget-test-helper).
+
+## Install
+
+- VS Code Marketplace: search **BDD Widget Test Helper** in the Extensions
+  view, or follow the badge above.
+- VSCodium / Open VSX: search **BDD Widget Test Helper** in the Extensions
+  view (VSCodium uses Open VSX by default).
+- From a VSIX: `code --install-extension bdd-widget-test-helper-<version>.vsix`
+  (build one with `npm run package:vsix`).
+
+The extension activates for `.feature` files and needs no Dart tooling at
+runtime.
 
 ## Features
 
@@ -22,10 +35,13 @@ no proprietary Microsoft services), so it is publishable to
   generator exactly:
   - step text → snake_case file name (`I tap text` → `step/i_tap_text.dart`)
   - step text → camelCase function name (`I tap text` → `iTapText`)
-  - `{...}` parameters are stripped from the name; quoted / int / double /
-    bool parameters become `String` / `num` / `bool` in the scaffold
+  - `{...}` parameters are stripped from the name; quoted / numeric / bool
+    parameters become `String` / `num` / `bool` in the scaffold, anything
+    else `dynamic`
   - `<placeholder>` from Scenario Outlines is stripped from the name and
     becomes a `dynamic` parameter
+  - steps with a data table get the `bdd.DataTable dataTable` parameter and
+    import
   - accented Latin is folded to ASCII (`çalışıyor` → `calisiyor`), so
     Turkish (and every other Latin-script Gherkin dialect) works
   - built-in steps (`the app is running`, `I see {..} text`, …) are known
@@ -47,13 +63,15 @@ no proprietary Microsoft services), so it is publishable to
 
 Mirrors `bdd_widget_test`'s resolution order:
 
-1. `step/` folder next to the feature file (or the folder configured via
+1. The built-in step set shipped with `bdd_widget_test` — checked first, so
+   built-in steps always resolve as built-ins and never need a file (a local
+   `i_see_text.dart` is therefore *not* used for `I see {..} text`).
+2. `step/` folder next to the feature file (or the folder configured via
    `stepFolderName`, relative to the feature when it starts with `./` or
    `../`, otherwise relative to the test folder per `relativeToTestFolder`),
    searched recursively — the nearest match to the feature wins.
-2. `externalSteps` entries (e.g. `package:my_lib/step/i_tap_text.dart`),
+3. `externalSteps` entries (e.g. `package:my_lib/step/i_tap_text.dart`),
    resolved through `.dart_tool/package_config.json` when possible.
-3. The built-in step set shipped with `bdd_widget_test`.
 
 Options are read from `bdd_options.yaml` (nearest one walking up from the
 feature file) and `build.yaml`
@@ -101,11 +119,23 @@ generates.
 
 ```bash
 npm install
-npm run compile        # type-check + esbuild bundle
+npm run compile        # tsc --noEmit type-check + esbuild bundle → dist/
+npm run check-types    # tsc --noEmit only
+npm run lint           # ESLint (flat config)
 npm run test:unit      # vitest unit tests (naming, parser, yaml)
-npm test               # integration tests in VS Code (@vscode/test-electron)
-npm run package        # production bundle
+npm test               # compile + compile tests + integration tests in VS Code
+npm run package        # production bundle (minified, no sourcemap)
 npm run package:vsix   # build a .vsix with vsce
+```
+
+`npm test` compiles the integration tests with `tsconfig.test.json` and runs
+them through `@vscode/test-electron` (`test/runTests.js`) with
+`src/test/fixtures` as the workspace; the first run downloads a VS Code build
+into `.vscode-test/`. Node 18+ works locally (CI uses Node 24). What CI runs
+on a published release:
+
+```bash
+npm run compile && npx tsc --project tsconfig.test.json && npx vitest run && xvfb-run -a node test/runTests.js
 ```
 
 Project layout:
@@ -127,14 +157,23 @@ src/
   test/integration/       @vscode/test-electron integration tests
   test/fixtures/          sample feature project used by tests
 syntaxes/feature.tmLanguage.json   TextMate grammar
+language-configuration.json        .feature editor behaviour (comments, brackets)
+esbuild.js                         bundler (src/extension.ts → dist/extension.js)
+eslint.config.mts                  ESLint flat config
+test/runTests.js                   @vscode/test-electron launcher
+media/icon.png                     extension icon
+.github/workflows/publish.yml      CI: test, then publish to both marketplaces
 ```
 
 ### Port fidelity
 
 `src/naming.ts` is a line-by-line port of `bdd_widget_test`'s
 `string_utils.dart` + `step_generator.dart` (underscore/camelize/parseRawStepLine/
-stepIdentifier) and the `diacritic` package's replacement map. The unit
-tests assert the upstream package's own fixtures, e.g.
+stepIdentifier, `genericParameterType`, `examplePlaceholders`,
+`predefinedSteps`) and the `diacritic` package's replacement map;
+`src/codeActions.ts#scaffoldStepDart` mirrors `GenericStep.content` (imports,
+`Usage` comment, parameter typing). The unit tests assert the upstream
+package's own fixtures, e.g.
 `'los diacríticos son útil'` → `los_diacriticos_son_util`,
 `"I see {'0'} text"` → `i_see_text`, `'there are <start> cucumbers'` →
 `thereAreCucumbers`, `'2FA is on'` → rejected.
