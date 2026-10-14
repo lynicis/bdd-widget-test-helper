@@ -1,6 +1,6 @@
 id = "bdd-widget-test"
 name = "BDD Widget Test"
-version = "0.1.1"
+version = "0.2.0"
 schema_version = 1
 authors = ["Emre Sırmalı <lynicis@protonmail.com>"]
 description = "Go-to-definition, unresolved-step diagnostics and step-file scaffolding for Flutter bdd_widget_test .feature files"
