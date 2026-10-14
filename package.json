@@ -1,0 +1,128 @@
+{
+  "name": "bdd-widget-test-helper",
+  "displayName": "BDD Widget Test Helper",
+  "description": "Go to definition, quick-fix scaffolding and diagnostics for Flutter bdd_widget_test .feature files. Works with VS Code and VSCodium.",
+  "version": "0.1.0",
+  "publisher": "lynicis",
+  "license": "MIT",
+  "icon": "media/icon.png",
+  "author": {
+    "name": "Emre Sırmalı",
+    "email": "lynicis@protonmail.com",
+    "url": "https://github.com/lynicis"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynicis/vscode-bdd-dart"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Testing"
+  ],
+  "keywords": [
+    "flutter",
+    "dart",
+    "bdd",
+    "gherkin",
+    "cucumber",
+    "atdd",
+    "bdd_widget_test"
+  ],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "feature",
+        "aliases": [
+          "Gherkin",
+          "feature"
+        ],
+        "extensions": [
+          ".feature"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "feature",
+        "scopeName": "text.gherkin.feature",
+        "path": "./syntaxes/feature.tmLanguage.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "bddWidgetTest.createStepFile",
+        "title": "Create step file",
+        "category": "BDD"
+      },
+      {
+        "command": "bddWidgetTest.rebuildStepIndex",
+        "title": "Rebuild step index",
+        "category": "BDD"
+      }
+    ],
+    "configuration": {
+      "title": "BDD Widget Test Helper",
+      "properties": {
+        "bddWidgetTestHelper.stepFolderName": {
+          "type": "string",
+          "default": "./step",
+          "description": "Step folder, relative to the feature file (when starting with ./ or ../) or to the test folder. Mirrors the stepFolderName option of bdd_options.yaml."
+        },
+        "bddWidgetTestHelper.relativeToTestFolder": {
+          "type": "boolean",
+          "default": true,
+          "description": "Mirrors the relativeToTestFolder option of bdd_options.yaml: stepFolderName is relative to the test folder (test/ by default)."
+        },
+        "bddWidgetTestHelper.externalSteps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Extra step locations to try when a step file is not found locally, e.g. package:my_package/step/i_see_text.dart. Bdd_options.yaml values take precedence."
+        },
+        "bddWidgetTestHelper.showUnresolvedStepWarnings": {
+          "type": "boolean",
+          "default": true,
+          "description": "Report steps whose Dart file cannot be found as warnings."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "npm run check-types && node esbuild.js",
+    "watch": "npm-run-all -p watch:*",
+    "watch:esbuild": "node esbuild.js --watch",
+    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
+    "check-types": "tsc --noEmit --project tsconfig.json",
+    "lint": "eslint .",
+    "package": "npm run check-types && node esbuild.js --production",
+    "test": "npm run compile && tsc --project tsconfig.test.json && node test/runTests.js",
+    "test:unit": "node --experimental-vm-modules node_modules/.bin/vitest run",
+    "package:vsix": "vsce package"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@eslint/json": "^2.1.1",
+    "@eslint/markdown": "^8.0.3",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.85.0",
+    "@vscode/test-electron": "^2.3.9",
+    "@vscode/vsce": "^3.1.0",
+    "esbuild": "^0.21.5",
+    "eslint": "^10.12.0",
+    "globals": "^17.13.0",
+    "jiti": "^2.7.0",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.4.5",
+    "typescript-eslint": "^8.71.2",
+    "vitest": "^1.6.0"
+  }
+}

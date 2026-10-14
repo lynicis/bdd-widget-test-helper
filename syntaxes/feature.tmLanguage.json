@@ -1,0 +1,163 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Gherkin",
+  "scopeName": "text.gherkin.feature",
+  "patterns": [
+    { "include": "#comment" },
+    { "include": "#tag" },
+    { "include": "#feature" },
+    { "include": "#rule" },
+    { "include": "#background" },
+    { "include": "#scenario-outline" },
+    { "include": "#scenario" },
+    { "include": "#examples" },
+    { "include": "#after" },
+    { "include": "#step" },
+    { "include": "#table" },
+    { "include": "#docstring" }
+  ],
+  "repository": {
+    "comment": {
+      "match": "^\\s*(#).*",
+      "name": "comment.line.number-sign.feature"
+    },
+    "tag": {
+      "match": "(^|\\s)(@[\\w\\-:.,']+\\s*)+$",
+      "name": "entity.name.tag.feature"
+    },
+    "feature": {
+      "begin": "^\\s*(Feature|Business Need|Ability|Ability|Funksie|Funktionalität|Fonctionnalité|Funcionalidade|Functionalitate|Funcionalidad|Özellik|İş Gereksinimi|Gereksinim|İşlev|Kullanıcı Hikayesi|Yetenek|Teknik Gereksinim|Функционал|Функциональность|機能|功能):",
+      "end": "^(?!\\s)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.feature.feature" }
+      },
+      "patterns": [
+        { "include": "#comment" },
+        { "include": "#tag" },
+        { "include": "#scenario" },
+        { "include": "#scenario-outline" },
+        { "include": "#background" },
+        { "include": "#rule" },
+        { "include": "#after" },
+        { "include": "#step" }
+      ]
+    },
+    "rule": {
+      "begin": "^\\s*(Rule|Kural|İş Kuralı|Kaide|Hüküm|Madde|Regel|Règle|Regra):",
+      "end": "^(?!\\s)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.rule.feature" }
+      },
+      "patterns": [
+        { "include": "#comment" },
+        { "include": "#tag" },
+        { "include": "#scenario" },
+        { "include": "#scenario-outline" },
+        { "include": "#background" },
+        { "include": "#after" },
+        { "include": "#step" }
+      ]
+    },
+    "background": {
+      "begin": "^\\s*(Background|Arka Plan|Geçmiş|Ön Koşul|Önkoşul|Önceki Durum|Giriş|Mukaddime|Mevcut Durum|Hintergrund|Antecedents|Contexte|Contexto|Premiss|Taust|Fondo):",
+      "end": "^(?=\\s*(Feature|Rule|Background|Scenario|Scenario Outline|Examples|After|#|@))|^$",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.background.feature" }
+      },
+      "patterns": [
+        { "include": "#comment" },
+        { "include": "#step" },
+        { "include": "#table" },
+        { "include": "#docstring" }
+      ]
+    },
+    "scenario": {
+      "begin": "^\\s*(Scenario|Example|Örnek|Senaryo|Durum|Vaka|Szenario|Scénario|Cenário|Caso|Escenario|Primer|Сценарий|シナリオ|场景):",
+      "end": "^(?=\\s*(Feature|Rule|Background|Scenario|Scenario Outline|Examples|After|#|@))|^$",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.scenario.feature" }
+      },
+      "patterns": [
+        { "include": "#comment" },
+        { "include": "#step" },
+        { "include": "#table" },
+        { "include": "#docstring" }
+      ]
+    },
+    "scenario-outline": {
+      "begin": "^\\s*(Scenario Outline|Scenario Template|Senaryo taslağı|Senaryo şablonu|Szenario Entwurf|Plan du Scénario|Esquema do Cenário|Esquema del escenario):",
+      "end": "^(?=\\s*(Feature|Rule|Background|Scenario|Scenario Outline|Examples|After|#|@))|^$",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.scenario-outline.feature" }
+      },
+      "patterns": [
+        { "include": "#comment" },
+        { "include": "#step" },
+        { "include": "#table" },
+        { "include": "#docstring" },
+        { "include": "#examples" }
+      ]
+    },
+    "examples": {
+      "begin": "^\\s*(Examples|Örnekler|Değerler|Beispiele|Exemples|Exemplos|Ejemplos|Примеры|例|例子):",
+      "end": "^(?=\\s*(Feature|Rule|Background|Scenario|Scenario Outline|Examples|After|#|@))|^$",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.examples.feature" }
+      },
+      "patterns": [
+        { "include": "#comment" },
+        { "include": "#table" }
+      ]
+    },
+    "after": {
+      "begin": "^\\s*(After):",
+      "end": "^(?=\\s*(Feature|Rule|Background|Scenario|Scenario Outline|Examples|After|#|@))|^$",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.after.feature" }
+      },
+      "patterns": [
+        { "include": "#comment" },
+        { "include": "#step" },
+        { "include": "#table" },
+        { "include": "#docstring" }
+      ]
+    },
+    "step": {
+      "match": "^\\s*(\\*|Given|When|Then|And|But|Mevcut|Önceden|Geçmişte|Daha önce|Halihazırda|Zaten|Sistemde|Diyelim ki|Varsayalım ki|Farz edelim ki|Kabul edelim ki|Başlangıçta|Varsayılan olarak|Biliniyor ki|Eğer|Eğer ki|Ne zaman|Ne zaman ki|Şayet|Beklenen|O zaman|Sonuç olarak|Böylece|Bunun üzerine|Bu durumda|O takdirde|Şu halde|Netice itibariyle|Buna binaen|Ve|Hem de|Bir de|Ayrıca|İlaveten|Buna ek olarak|Fakat|Ama|Ancak|Yalnız|Lakin|Meğer ki|Buna mukabil|Aksi halde|Angenommen|Gegeben sei|Gegeben seien|Wenn|Dann|Und|Aber|Soit|Etant donné|Quand|Lorsque|Alors|Et|Mais|Dado|Dada|Dados|Dadas|Quando|Então|Entao|E|Mas|Dado que|Cuando|Entonces|Y|Пусть|Допустим|Дано|Если|Тогда|И|Но)\\s+(.*)$",
+      "captures": {
+        "1": { "name": "keyword.control.step.feature" },
+        "2": {
+          "name": "string.unquoted.step.feature",
+          "patterns": [
+            { "include": "#placeholder" },
+            { "include": "#parameter" }
+          ]
+        }
+      }
+    },
+    "placeholder": {
+      "match": "<[^>]+>",
+      "name": "variable.parameter.placeholder.feature"
+    },
+    "parameter": {
+      "match": "\\{[^{}]*\\}",
+      "name": "constant.character.parameter.feature"
+    },
+    "table": {
+      "begin": "^\\s*\\|",
+      "end": "^(?!\\s*\\|)",
+      "name": "string.interpolated.table.feature",
+      "patterns": [
+        {
+          "match": "\\\\|",
+          "name": "constant.character.escape.feature"
+        }
+      ]
+    },
+    "docstring": {
+      "begin": "^\\s*(\"\"\"|```)",
+      "end": "\\1",
+      "name": "string.quoted.docstring.feature"
+    }
+  }
+}

@@ -1,0 +1,30 @@
+name: Publish to VS Code Marketplace
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run tests
+        run: |
+          npm run compile
+          npx tsc --project tsconfig.test.json
+          npx vitest run
+          xvfb-run -a node test/runTests.js
+
+      - name: Package and publish
+        run: npx vsce publish
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
