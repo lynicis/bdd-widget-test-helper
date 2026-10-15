@@ -6,6 +6,9 @@ on:
 
 jobs:
   publish:
+    permissions:
+      contents: read
+      id-token: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -29,12 +32,7 @@ jobs:
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
-      - name: Create Open VSX namespace (no-op if it exists)
-        run: npx --yes ovsx create-namespace lynicis || [ "$(curl -s -o /dev/null -w '%{http_code}' https://open-vsx.org/api/lynicis)" = "200" ]
-        env:
-          OVSX_PAT: ${{ secrets.OVSX_PAT }}
-
       - name: Publish to Open VSX
-        run: npx --yes ovsx publish --skip-duplicate
+        run: npx --yes ovsx publish --skip-duplicate --trusted-publishing
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
