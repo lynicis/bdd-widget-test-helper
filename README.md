@@ -1,5 +1,6 @@
 # BDD Widget Test Helper
 
+[![CI](https://github.com/lynicis/bdd-widget-test-helper/actions/workflows/ci.yml/badge.svg)](https://github.com/lynicis/bdd-widget-test-helper/actions/workflows/ci.yml)
 [![Visual Studio Marketplace Version](https://vsmarketplacebadges.dev/version/lynicis.bdd-widget-test-helper.svg)](https://marketplace.visualstudio.com/items?itemName=lynicis.bdd-widget-test-helper)
 ![Open VSX Version](https://img.shields.io/open-vsx/v/lynicis/bdd-widget-test-helper)
 
