@@ -3,7 +3,7 @@
  * real bundled server and drives it over stdio with hand-rolled JSON-RPC
  * framing. Catches framing regressions plus the shared-core resolution wiring
  * (diagnostics + go-to-definition + create-step-file quick-fix) that the Zed
- * extension depends on. Requires `npm run build:zed` first.
+ * extension depends on. Requires `bun run build:zed` first.
  */
 import { spawn, type ChildProcess } from "child_process";
 import * as fs from "fs";
@@ -62,7 +62,7 @@ interface Action {
 
 describe("zed LSP server", () => {
   if (!fs.existsSync(serverPath)) {
-    it.skip("zed/server/server.cjs missing — run `npm run build:zed` first", () => {});
+    it.skip("zed/server/server.cjs missing — run `bun run build:zed` first", () => {});
     return;
   }
 

@@ -40,7 +40,7 @@ in a test — extract the pure part instead.
 | ----------------------------- | --------------------------------- |
 | `src/diacritics.generated.ts` | port from the `diacritic` package |
 | `src/gherkin/dialects.json`   | official Gherkin dialect table    |
-| `zed/server/server.cjs`       | `npm run build:zed`               |
+| `zed/server/server.cjs`       | `bun run build:zed`               |
 
 ## Development
 
@@ -48,19 +48,19 @@ See the [Development section of the README](README.md#development) for the
 full command list and project layout. In short:
 
 ```bash
-npm install
-npm run lint
-npm run check-types
-npm run test:unit        # vitest, plain Node
-npx tsc --project tsconfig.test.json && node test/runTests.js   # integration, needs a display
+bun install
+bun run lint
+bun run check-types
+bun run test:unit        # vitest, plain Node
+bunx tsc --project tsconfig.test.json && node test/runTests.js   # integration, needs a display
 ```
 
-`npm run build:zed` must have been run at least once or the `zedServer` unit
+`bun run build:zed` must have been run at least once or the `zedServer` unit
 test skips itself.
 
 ## Before opening a pull request
 
-- [ ] `npm run lint`, `npm run check-types` and `npm run test:unit` all pass.
+- [ ] `bun run lint`, `bun run check-types` and `bun run test:unit` all pass.
 - [ ] Integration tests pass (`node test/runTests.js`, or `xvfb-run -a node …`
       on Linux).
 - [ ] Behaviour changes come with tests; naming/option changes also update the
@@ -84,9 +84,9 @@ test skips itself.
   classes; error handling is defensive and silent.
 - Core is synchronous; file I/O uses sync `fs`. Only `createStepFile` is async.
 - Formatting is checked through ESLint (`prettier/prettier` in
-  `eslint.config.mts`), so `npm run lint --fix` is the formatter. Match the
+  `eslint.config.mts`), so `bun run lint --fix` is the formatter. Match the
   surrounding style and never reformat unrelated files in a behaviour change.
-  `npm run lint` covers JS, TS, JSON and Markdown.
+  `bun run lint` covers JS, TS, JSON and Markdown.
 
 ## Commits and branches
 

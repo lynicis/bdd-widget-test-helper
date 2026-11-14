@@ -16,23 +16,24 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 24
-          cache: npm
 
-      - run: npm ci
+      - uses: oven-sh/setup-bun@v2
+
+      - run: bun install --frozen-lockfile
 
       - name: Run tests
         run: |
-          npm run compile
-          npx tsc --project tsconfig.test.json
-          npx vitest run
+          bun run compile
+          bunx tsc --project tsconfig.test.json
+          bunx vitest run
           xvfb-run -a node test/runTests.js
 
       - name: Publish to VS Code Marketplace
-        run: npx vsce publish --skip-duplicate
+        run: bunx vsce publish --skip-duplicate
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
       - name: Publish to Open VSX
-        run: npx --yes ovsx publish --skip-duplicate --trusted-publishing
+        run: bunx --yes ovsx publish --skip-duplicate --trusted-publishing
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}

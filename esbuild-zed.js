@@ -14,7 +14,7 @@ const config = {
   logLevel: "info",
   entryPoints: ["zed/server/src/lsp.ts"],
   outfile: "zed/server/server.cjs",
-  banner: { js: "// GENERATED — run npm run build:zed; do not edit" },
+  banner: { js: "// GENERATED — run bun run build:zed; do not edit" },
 };
 
 esbuild.build(config).catch((e) => {

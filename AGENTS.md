@@ -39,31 +39,31 @@ Wiring: extension.ts (activate, subscriptions, debounced index.onDidChange) · z
 | `src/test/integration/`   | VS Code integration test (compiled to `out/`)                                                                                                                            |
 | `src/test/fixtures/test/` | Worked `.feature` + `step/*.dart` examples; used as the integration-test workspace                                                                                       |
 | `zed/`                    | Zed editor extension: Rust shim (`src/lib.rs`), manifest (`extension.toml`), tree-sitter queries (`languages/gherkin/`), and the LSP server source (`server/src/lsp.ts`) |
-| `zed/server/server.cjs`   | GENERATED LSP bundle (committed) — build with `npm run build:zed`, do not hand-edit                                                                                      |
+| `zed/server/server.cjs`   | GENERATED LSP bundle (committed) — build with `bun run build:zed`, do not hand-edit                                                                                      |
 | `test/`                   | `runTests.js` integration launcher only                                                                                                                                  |
 | `syntaxes/`               | TextMate grammar for `.feature` highlighting                                                                                                                             |
 
 ## Development Commands
 
 ```bash
-npm install               # npm is the package manager (package-lock.json, no pnpm/yarn)
-npm run compile           # tsc --noEmit type-check + esbuild bundle → dist/extension.js
-npm run watch             # parallel esbuild --watch + tsc --watch
-npm run lint              # ESLint (flat config eslint.config.mts: JS + TS + JSON + Markdown)
-npm run check-types       # tsc --noEmit only (tsconfig.json, excludes src/test)
-npm run build:zed         # type-check + esbuild bundle → zed/server/server.cjs (Zed LSP server)
-npm run test:unit         # vitest unit tests (Node, no VS Code)
-npx tsc --project tsconfig.test.json   # compile integration tests → out/ (required before runTests.js)
+bun install               # bun is the package manager (bun.lock)
+bun run compile           # tsc --noEmit type-check + esbuild bundle → dist/extension.js
+bun run watch             # parallel esbuild --watch + tsc --watch
+bun run lint              # ESLint (flat config eslint.config.mts: JS + TS + JSON + Markdown)
+bun run check-types       # tsc --noEmit only (tsconfig.json, excludes src/test)
+bun run build:zed         # type-check + esbuild bundle → zed/server/server.cjs (Zed LSP server)
+bun run test:unit         # vitest unit tests (Node, no VS Code)
+bunx tsc --project tsconfig.test.json   # compile integration tests → out/ (required before runTests.js)
 node test/runTests.js     # integration tests (@vscode/test-electron; opens src/test/fixtures)
-npm test                  # compile + integration only — does NOT compile tests or run vitest
-npm run package           # production bundle (minified, no sourcemap)
-npm run package:vsix      # vsce package → .vsix
+bun run test              # compile + integration only — does NOT compile tests or run vitest
+bun run package           # production bundle (minified, no sourcemap)
+bun run package:vsix      # vsce package → .vsix
 ```
 
 Full suite (what CI in `.github/workflows/publish.yml` runs):
 
 ```bash
-npm run compile && npx tsc --project tsconfig.test.json && npx vitest run && xvfb-run -a node test/runTests.js
+bun run compile && bunx tsc --project tsconfig.test.json && bunx vitest run && xvfb-run -a node test/runTests.js
 ```
 
 (`xvfb-run` is Linux/CI-only; on macOS run `node test/runTests.js` directly. Integration tests download a VS Code instance into `.vscode-test/` on first run.)
@@ -78,7 +78,7 @@ npm run compile && npx tsc --project tsconfig.test.json && npx vitest run && xvf
 - **Async**: providers are synchronous; file I/O uses sync `fs` (`readFileSync`, `existsSync`, `mkdirSync`). Only `createStepFile` is `async`. Events via a plain listener set — `StepIndex.onDidChange(cb)` returns an unsubscribe function (the VS Code host wraps it in a `Disposable`).
 - **State**: class-encapsulated `Map`/`Set` updated through an injected file watcher (`StepFolderWatcher`); no module-global singletons.
 - **vscode-free pure modules**: the whole core (`naming.ts`, `bddOptions.ts`, `stepIndex.ts`, `stepResolver.ts`, `featureParser.ts`, `simpleYaml.ts`) never imports `vscode`, so the same code backs the VS Code extension and the Zed LSP server (`zed/server/src/lsp.ts`). `stepIndex` takes an injected `StepFolderWatcher` + `getDefaults`, and `stepDefinitionLocation`/`unresolvedSteps` are pure — inject host glue (`extension.ts` for VS Code, `lsp.ts` for Zed) instead of importing `vscode`. Never mock `vscode` — extract instead.
-- **Generated files — do not hand-edit**: `src/diacritics.generated.ts`, `src/gherkin/dialects.json`, `zed/server/server.cjs` (build with `npm run build:zed`).
+- **Generated files — do not hand-edit**: `src/diacritics.generated.ts`, `src/gherkin/dialects.json`, `zed/server/server.cjs` (build with `bun run build:zed`).
 
 ## Important Files
 
@@ -100,13 +100,13 @@ npm run compile && npx tsc --project tsconfig.test.json && npx vitest run && xvf
 
 ## Runtime/Tooling Preferences
 
-- **Node**, not Bun: scripts run via `node`; `test:unit` needs `node --experimental-vm-modules`. `@types/node` is 24.x, esbuild targets node18, CI uses Node 24.
-- **Lint**: ESLint 10 flat config in `eslint.config.mts` — `js/recommended` + `typescript-eslint/recommended` for TS/JS, `@eslint/json` for JSON, `@eslint/markdown` (GFM) for Markdown. Run `npm run lint`. Formatting is enforced by prettier via ESLint on TS/JS (not Markdown) — match existing style. Config ignores `dist/`, `out/`, `.vscode-test/`, `.agents/`, and `package-lock.json`; root `*.js` and `test/*.js` are `sourceType: commonjs`. CI does not run lint.
+- **Bun** is the package manager (`bun install`, `bun.lock`). Extension scripts run via Node/Bun (`test:unit` needs Node with `--experimental-vm-modules`). `@types/node` is 24.x, esbuild targets node18, CI uses Node 24 and Bun.
+- **Lint**: ESLint 10 flat config in `eslint.config.mts` — `js/recommended` + `typescript-eslint/recommended` for TS/JS, `@eslint/json` for JSON, `@eslint/markdown` (GFM) for Markdown. Run `bun run lint`. Formatting is enforced by prettier via ESLint on TS/JS (not Markdown) — match existing style. Config ignores `dist/`, `out/`, `.vscode-test/`, `.agents/`, `bun.lock`, and `bun.lockb`; root `*.js` and `test/*.js` are `sourceType: commonjs`. CI does not run lint.
 - Host engine: `vscode ^1.85.0`, desktop Node host only (no `browser`/web entry).
 - The extension has no production `dependencies`. Don't add runtime deps; extension must stay dependency-light.
 
 ## Testing & QA
 
-- **Unit** (Vitest, plain Node): `src/test/unit/*.test.ts` — `featureParser`, `naming`, `bddOptions`, and `zedServer` (drives the built `zed/server/server.cjs` over stdio; run `npm run build:zed` first, else it skips). Run: `npm run test:unit`. These assert upstream `bdd_widget_test` fixtures (e.g. `'los diacríticos son útil'` → `los_diacriticos_son_util`, `'there are <start> cucumbers'` → `thereAreCucumbers`, `'2FA is on'` → rejected). Naming changes MUST keep these passing — they encode the parity contract.
+- **Unit** (Vitest, plain Node): `src/test/unit/*.test.ts` — `featureParser`, `naming`, `bddOptions`, and `zedServer` (drives the built `zed/server/server.cjs` over stdio; run `bun run build:zed` first, else it skips). Run: `bun run test:unit`. These assert upstream `bdd_widget_test` fixtures (e.g. `'los diacríticos son útil'` → `los_diacriticos_son_util`, `'there are <start> cucumbers'` → `thereAreCucumbers`, `'2FA is on'` → rejected). Naming changes MUST keep these passing — they encode the parity contract.
 - **Integration** (`@vscode/test-electron` + Node `assert`, no mocha runtime): `src/test/integration/extension.test.ts`, compiled with `tsconfig.test.json` → `out/`, launched by `test/runTests.js` with `src/test/fixtures` as the workspace. Exercises activation, definition provider, document links, and the `createStepFile` command. The extension id `lynicis.bdd-widget-test-helper` is hardcoded there — must match `package.json`.
-- Add or update tests for behavior changes; run `npm run lint`, `npm run check-types`, `npm run test:unit`, and the integration suite before merging.
+- Add or update tests for behavior changes; run `bun run lint`, `bun run check-types`, `bun run test:unit`, and the integration suite before merging.

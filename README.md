@@ -20,7 +20,7 @@ and [Open VSX](https://open-vsx.org/extension/lynicis/bdd-widget-test-helper).
 - VSCodium / Open VSX: search **BDD Widget Test Helper** in the Extensions
   view (VSCodium uses Open VSX by default).
 - From a VSIX: `code --install-extension bdd-widget-test-helper-<version>.vsix`
-  (build one with `npm run package:vsix`).
+  (build one with `bun run package:vsix`).
 
 The extension activates for `.feature` files and needs no Dart tooling at
 runtime.
@@ -34,7 +34,7 @@ zero-dependency Node server (`zed/server/server.cjs`) that reuses this repo's
 TypeScript core — the `bdd_widget_test` naming/resolution contract stays
 single-sourced.
 
-Install (dev): `npm run build:zed`, then in Zed **Extensions → Install Dev
+Install (dev): `bun run build:zed`, then in Zed **Extensions → Install Dev
 Extension → `zed/`**. Settings go under `lsp.bdd-widget-test.settings` with the
 same keys as `bddWidgetTestHelper.*` (`stepFolderName`, `relativeToTestFolder`,
 `externalSteps`, `showUnresolvedStepWarnings`). See [`zed/README.md`](zed/README.md)
@@ -139,25 +139,25 @@ generates.
 ## Development
 
 ```bash
-npm install
-npm run compile        # tsc --noEmit type-check + esbuild bundle → dist/
-npm run check-types    # tsc --noEmit only
-npm run build:zed      # type-check + bundle the Zed LSP server → zed/server/server.cjs
-npm run lint           # ESLint (flat config)
-npm run test:unit      # vitest unit tests (naming, parser, yaml)
-npm test               # compile + compile tests + integration tests in VS Code
-npm run package        # production bundle (minified, no sourcemap)
-npm run package:vsix   # build a .vsix with vsce
+bun install
+bun run compile        # tsc --noEmit type-check + esbuild bundle → dist/
+bun run check-types    # tsc --noEmit only
+bun run build:zed      # type-check + bundle the Zed LSP server → zed/server/server.cjs
+bun run lint           # ESLint (flat config)
+bun run test:unit      # vitest unit tests (naming, parser, yaml)
+bun run test           # compile + compile tests + integration tests in VS Code
+bun run package        # production bundle (minified, no sourcemap)
+bun run package:vsix   # build a .vsix with vsce
 ```
 
-`npm test` compiles the integration tests with `tsconfig.test.json` and runs
+`bun run test` compiles the integration tests with `tsconfig.test.json` and runs
 them through `@vscode/test-electron` (`test/runTests.js`) with
 `src/test/fixtures` as the workspace; the first run downloads a VS Code build
 into `.vscode-test/`. Node 18+ works locally (CI uses Node 24). What CI runs
 on a published release:
 
 ```bash
-npm run compile && npx tsc --project tsconfig.test.json && npx vitest run && xvfb-run -a node test/runTests.js
+bun run compile && bunx tsc --project tsconfig.test.json && bunx vitest run && xvfb-run -a node test/runTests.js
 ```
 
 Project layout:
@@ -182,7 +182,7 @@ zed/                          Zed editor extension (see zed/README.md)
   extension.toml               Zed manifest (language + grammar + LSP)
   src/lib.rs                   Rust shim that launches the embedded Node server
   server/src/lsp.ts            LSP server source (uses the shared src/ core)
-  server/server.cjs            GENERATED bundle — do not hand-edit (npm run build:zed)
+  server/server.cjs            GENERATED bundle — do not hand-edit (bun run build:zed)
   languages/gherkin/           Gherkin language config + tree-sitter queries
   icon.png                     Zed extension icon
 syntaxes/feature.tmLanguage.json   TextMate grammar

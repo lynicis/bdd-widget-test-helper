@@ -1,7 +1,7 @@
 // bdd-widget-test — zero-dependency Node LSP server for Flutter
-// bdd_widget_test .feature files. Single file, Node stdio, no npm install.
+// bdd_widget_test .feature files. Single file, Node stdio, no external install.
 //
-// Generated entry point for the Zed extension: bundled by `npm run build:zed`
+// Generated entry point for the Zed extension: bundled by `bun run build:zed`
 // (esbuild-zed.js) into zed/server/server.cjs. All step resolution/naming comes
 // from the shared TypeScript core under src/ — the same code the VS Code
 // extension uses, so the bdd_widget_test parity contract stays single-sourced.

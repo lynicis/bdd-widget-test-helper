@@ -16,7 +16,8 @@ export default defineConfig([
       "zed/target/**",
       "zed/server/server.cjs",
       "graphify-out/**",
-      "package-lock.json",
+      "bun.lock",
+      "bun.lockb",
     ],
   },
   {

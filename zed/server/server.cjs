@@ -1,4 +1,4 @@
-// GENERATED — run npm run build:zed; do not edit
+// GENERATED — run bun run build:zed; do not edit
 "use strict";
 var __create = Object.create;
 var __defProp = Object.defineProperty;
