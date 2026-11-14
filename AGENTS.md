@@ -79,7 +79,6 @@ npm run compile && npx tsc --project tsconfig.test.json && npx vitest run && xvf
 - **State**: class-encapsulated `Map`/`Set` updated through an injected file watcher (`StepFolderWatcher`); no module-global singletons.
 - **vscode-free pure modules**: the whole core (`naming.ts`, `bddOptions.ts`, `stepIndex.ts`, `stepResolver.ts`, `featureParser.ts`, `simpleYaml.ts`) never imports `vscode`, so the same code backs the VS Code extension and the Zed LSP server (`zed/server/src/lsp.ts`). `stepIndex` takes an injected `StepFolderWatcher` + `getDefaults`, and `stepDefinitionLocation`/`unresolvedSteps` are pure — inject host glue (`extension.ts` for VS Code, `lsp.ts` for Zed) instead of importing `vscode`. Never mock `vscode` — extract instead.
 - **Generated files — do not hand-edit**: `src/diacritics.generated.ts`, `src/gherkin/dialects.json`, `zed/server/server.cjs` (build with `npm run build:zed`).
-- **Known dead exports** (candidates for removal, not reuse): `featureParser.readFeatureFile`, `stepResolver.stepTextRange`; `.vscode-test.js` is unused by the current runner.
 
 ## Important Files
 
@@ -101,10 +100,10 @@ npm run compile && npx tsc --project tsconfig.test.json && npx vitest run && xvf
 
 ## Runtime/Tooling Preferences
 
-- **Node**, not Bun: scripts run via `node`; `test:unit` needs `node --experimental-vm-modules`. `@types/node` is 20.x, esbuild targets node18, CI uses Node 24.
-- **Lint**: ESLint 10 flat config in `eslint.config.mts` — `js/recommended` + `typescript-eslint/recommended` for TS/JS, `@eslint/json` for JSON, `@eslint/markdown` (GFM) for Markdown. Run `npm run lint`. No formatter (Prettier/Biome) — match existing style. Config ignores `dist/`, `out/`, `.vscode-test/`, `.agents/`, and `package-lock.json`; root `*.js` and `test/*.js` are `sourceType: commonjs`. CI does not run lint.
+- **Node**, not Bun: scripts run via `node`; `test:unit` needs `node --experimental-vm-modules`. `@types/node` is 24.x, esbuild targets node18, CI uses Node 24.
+- **Lint**: ESLint 10 flat config in `eslint.config.mts` — `js/recommended` + `typescript-eslint/recommended` for TS/JS, `@eslint/json` for JSON, `@eslint/markdown` (GFM) for Markdown. Run `npm run lint`. Formatting is enforced by prettier via ESLint on TS/JS (not Markdown) — match existing style. Config ignores `dist/`, `out/`, `.vscode-test/`, `.agents/`, and `package-lock.json`; root `*.js` and `test/*.js` are `sourceType: commonjs`. CI does not run lint.
 - Host engine: `vscode ^1.85.0`, desktop Node host only (no `browser`/web entry).
-- Production `dependencies` contains only `mocha` — known to be unnecessary at runtime (integration tests are assert-based; `@types/mocha` + `tsconfig.test.json` cover types). Don't add runtime deps; extension must stay dependency-light.
+- The extension has no production `dependencies`. Don't add runtime deps; extension must stay dependency-light.
 
 ## Testing & QA
 

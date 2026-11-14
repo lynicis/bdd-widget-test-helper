@@ -106,7 +106,7 @@
     "watch": "npm-run-all -p watch:*",
     "watch:esbuild": "node esbuild.js --watch",
     "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
-    "check-types": "tsc --noEmit --project tsconfig.json",
+    "check-types": "tsc --noEmit --project tsconfig.json && tsc --project tsconfig.unit.json",
     "lint": "eslint .",
     "package": "npm run check-types && node esbuild.js --production",
     "test": "npm run compile && tsc --project tsconfig.test.json && node test/runTests.js",
