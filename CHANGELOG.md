@@ -9,13 +9,32 @@ and this project adheres to
 
 ## Unreleased
 
-### Changed
-- Package management moved from npm to Bun (`bun install`, `bun.lock`); npm
-- DevDependency upgrades (`@types/node`, `eslint`, `eslint-config-prettier`,
-- `@types/node` and `@types/vscode` pinned to exact versions
+## 0.2.2 - 2026-11-14
 
 ### Fixed
+
 - A step file created outside the editor (or a stale index entry) no longer
+  kept showing the "Create step file" quick-fix: the index is healed from disk
+  before the action is offered, and diagnostics clear with it.
+
+### Changed
+
+- Package management moved from npm to Bun (`bun install`, `bun.lock`); npm
+  scripts and the publish workflow use Bun.
+- Declared supported engine versions for Node (`>=26`) and Bun (`>=1.4`).
+- DevDependency upgrades (`@types/node`, `eslint`, `eslint-config-prettier`,
+  `eslint-plugin-prettier`, `jiti`, `typescript`, `typescript-eslint`).
+- `@types/node` and `@types/vscode` pinned to exact versions.
+- Zed extension version bumped to `0.2.2` (`zed/extension.toml`, `zed/Cargo.toml`).
+
+### Documentation
+
+- `README.md` restructured around install → first-run → options, with Zed details
+  moved to `zed/README.md` and contributor rules to `CONTRIBUTING.md`.
+- CI workflow status badge added to `README.md`.
+- `AGENTS.md` reduced to the commands, conventions and generated-file rules an
+  agent needs.
+
 ## 0.2.1 - 2026-10-14
 
 ### Fixed
