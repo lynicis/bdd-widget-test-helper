@@ -9,26 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
-### Fixed
-
-- A step file created outside the editor (or a stale index entry) no longer
-  kept showing the "Create step file" quick-fix: the index is healed from disk
-  before the action is offered, and diagnostics clear with it.
-
 ### Changed
-
 - Package management moved from npm to Bun (`bun install`, `bun.lock`); npm
-  scripts and the publish workflow use Bun.
 - DevDependency upgrades (`@types/node`, `eslint`, `eslint-config-prettier`,
-  `eslint-plugin-prettier`, `jiti`, `typescript`, `typescript-eslint`).
+- `@types/node` and `@types/vscode` pinned to exact versions
 
-### Documentation
-
-- README restructured around install → first-run → options, with Zed details
-  moved to `zed/README.md` and contributor rules to `CONTRIBUTING.md`.
-- `AGENTS.md` reduced to the commands, conventions and generated-file rules an
-  agent needs.
-
+### Fixed
+- A step file created outside the editor (or a stale index entry) no longer
 ## 0.2.1 - 2026-10-14
 
 ### Fixed
