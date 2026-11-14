@@ -21,7 +21,7 @@ If your paths differ, check `server/` in `vscode-dev` for the source root resolu
 
 ## Start the dev server
 
-**Critical:** Run `npm run dev` from the **`vscode-dev`** folder, NOT from `vscode`. The `vscode` repo has no `dev` script and will fail with `npm error Missing script: "dev"`. Terminal tools that simplify/strip leading `cd` into separate commands will silently keep the cwd of a previous terminal — always use an absolute `pushd` or verify with `pwd` before `npm run dev`.
+**Critical:** Run `npm run dev` from the **`vscode-dev`** folder, NOT from `vscode`. The `vscode` repo has no `dev` script and will fail with `npm error Missing script: "dev"`. Terminal tools that simplify/strip leading `cd` into separate commands will silently keep the cwd of a previous terminal — always use an absolute `pushd` or verify with `pwd` before `pnpm run dev`.
 
 ```bash
 cd /path/to/vscode-dev     # NOT /path/to/vscode
@@ -57,12 +57,12 @@ The service worker caches client assets aggressively. A plain reload can still s
 
 ```js
 await page.evaluate(async () => {
-  const regs = (await navigator.serviceWorker?.getRegistrations()) ?? [];
-  await Promise.all(regs.map((r) => r.unregister()));
-  const keys = (await caches?.keys()) ?? [];
-  await Promise.all(keys.map((k) => caches.delete(k)));
+  const regs = await navigator.serviceWorker?.getRegistrations() ?? [];
+  await Promise.all(regs.map(r => r.unregister()));
+  const keys = await caches?.keys() ?? [];
+  await Promise.all(keys.map(k => caches.delete(k)));
 });
-await page.reload({ waitUntil: "domcontentloaded" });
+await page.reload({ waitUntil: 'domcontentloaded' });
 ```
 
 ### Simulating mobile (only when explicitly requested)
@@ -71,21 +71,14 @@ The integrated browser panel clamps width, so `page.setViewportSize()` and CDP `
 
 ```js
 const client = await page.context().newCDPSession(page);
-await client.send("Emulation.setUserAgentOverride", {
-  userAgent:
-    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
-  platform: "iPhone",
+await client.send('Emulation.setUserAgentOverride', {
+  userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+  platform: 'iPhone'
 });
-await client.send("Emulation.setTouchEmulationEnabled", {
-  enabled: true,
-  maxTouchPoints: 5,
-});
-await client.send("Emulation.setDeviceMetricsOverride", {
-  width: 393,
-  height: 852,
-  deviceScaleFactor: 3,
-  mobile: true,
-  screenOrientation: { type: "portraitPrimary", angle: 0 },
+await client.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
+await client.send('Emulation.setDeviceMetricsOverride', {
+  width: 393, height: 852, deviceScaleFactor: 3, mobile: true,
+  screenOrientation: { type: 'portraitPrimary', angle: 0 }
 });
 await page.reload();
 ```
@@ -123,7 +116,7 @@ node out/vs/platform/agentHost/node/agentHostServerMain.js \
 # Listens on ws://localhost:8765
 ```
 
-Prerequisite: `out/` in the `vscode` repo must be populated by the `VS Code - Build` task (or `npm run watch`). If `out/vs/platform/agentHost/node/agentHostServerMain.js` is missing, start that task first.
+Prerequisite: `out/` in the `vscode` repo must be populated by the `VS Code - Build` task (or `pnpm run watch`). If `out/vs/platform/agentHost/node/agentHostServerMain.js` is missing, start that task first.
 
 `--enable-mock-agent` registers the `ScriptedMockAgent` from `src/vs/platform/agentHost/test/node/mockAgent.ts` with one pre-existing session. Seed additional sessions via the `VSCODE_AGENT_HOST_MOCK_SEED_SESSIONS` env var, using a comma-separated list of session URIs (for example, `VSCODE_AGENT_HOST_MOCK_SEED_SESSIONS=mock://pre-1,mock://pre-2`). Scripted prompts include `hello`, `use-tool`, `error`, `permission`, `write-file`, `run-safe-command`, `slow`, `client-tool`, `subagent`, etc. (see `mockAgent.ts` for the full list).
 

@@ -7,10 +7,10 @@ description: OpenTelemetry guidance for VS Code agent experiences. Use when chan
 
 Start by identifying the execution surface. VS Code has separate OTel pipelines with different owners and configuration:
 
-| Surface                                      | Process and producer                                               | Configuration                | Authoritative VS Code document                                                                                              |
-| -------------------------------------------- | ------------------------------------------------------------------ | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Agent Host sessions (Copilot, Claude, Codex) | Provider-native telemetry routed by the Agent Host utility process | `chat.agentHost.otel.*`      | [`src/vs/platform/agentHost/OTEL.md`](../../../src/vs/platform/agentHost/OTEL.md)                                           |
-| Local Copilot Chat                           | Copilot Chat extension host and `IOTelService`                     | `github.copilot.chat.otel.*` | [`extensions/copilot/docs/monitoring/agent_monitoring.md`](../../../extensions/copilot/docs/monitoring/agent_monitoring.md) |
+| Surface | Process and producer | Configuration | Authoritative VS Code document |
+|---|---|---|---|
+| Agent Host sessions (Copilot, Claude, Codex) | Provider-native telemetry routed by the Agent Host utility process | `chat.agentHost.otel.*` | [`src/vs/platform/agentHost/OTEL.md`](../../../src/vs/platform/agentHost/OTEL.md) |
+| Local Copilot Chat | Copilot Chat extension host and `IOTelService` | `github.copilot.chat.otel.*` | [`extensions/copilot/docs/monitoring/agent_monitoring.md`](../../../extensions/copilot/docs/monitoring/agent_monitoring.md) |
 
 Do not combine these pipelines or assume that a setting for one configures another.
 
@@ -26,7 +26,7 @@ Local Copilot Chat remains a separate user-visible extension-host surface. Its f
 
 Copilot's native OTel signal contract lives in `github/copilot-agent-runtime`, not in VS Code's TypeScript attribute constants. Before auditing or changing the integration:
 
-1. Read the versions of `@github/copilot-sdk` and `@github/copilot` from the root `package-lock.json`.
+1. Read the `@github/copilot-sdk` version from the root importer (`.`) of `pnpm-lock.yaml` and the bundled runtime version from `copilotRuntimeVersion` in the root `package.json`.
 2. Resolve the matching immutable runtime tag and commit.
 3. Read the runtime monitoring reference and implementation at that revision.
 4. Use runtime `main` only after confirming that the relevant files are unchanged from the bundled revision.
@@ -173,8 +173,8 @@ Agent Host examples:
 Local Copilot Chat examples, from `extensions/copilot/`:
 
 ```bash
-npx tsc --noEmit --project tsconfig.json
-npm test -- --grep "OTel"
+pnpm exec tsc --noEmit --project tsconfig.json
+pnpm test --grep "OTel"
 ```
 
 For documentation-only changes, verify:

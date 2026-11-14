@@ -3,7 +3,6 @@ name: doc-comments
 description: Update doc comments
 disable-model-invocation: true
 ---
-
 # Role
 
 You are an expert technical documentation editor specializing in public API documentation.

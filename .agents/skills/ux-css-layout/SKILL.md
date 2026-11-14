@@ -1,6 +1,6 @@
 ---
 name: ux-css-layout
-description: VS Code CSS conventions, file organization, class naming, standard sizes, SplitView/Grid layout, scrollable content, responsive layout, and text overflow/ellipsis patterns. Use when writing CSS, building layouts, or fixing text truncation issues.
+description: VS Code CSS conventions, SplitView/Grid layout, semantic sizes, rounded-surface geometry, clipping, scrollable content, and text overflow. Use when writing CSS, building layouts, or fixing corners, panel gaps, or text truncation.
 ---
 
 This skill covers CSS file organization, naming, standard sizes, programmatic layout (SplitView, Grid, scrollable), responsive patterns, and text overflow handling.
@@ -22,11 +22,10 @@ src/vs/workbench/contrib/myFeature/browser/
 ```
 
 Import CSS directly in the TS file:
-
 ```typescript
-import "./media/myFeature.css";
+import './media/myFeature.css';
 // or for base widgets:
-import "./button.css";
+import './button.css';
 ```
 
 Workbench-level global styles live in `src/vs/workbench/browser/media/`.
@@ -40,34 +39,37 @@ Workbench-level global styles live in `src/vs/workbench/browser/media/`.
 
 ## 3. Standard Sizes
 
-| Element                      | Size                               |
-| ---------------------------- | ---------------------------------- |
-| Part title height            | 35px                               |
-| Title padding (horizontal)   | 8px                                |
-| Title label inner padding    | 12px                               |
-| Action area padding          | 5px                                |
-| Action icon size             | 16px                               |
-| Body font-size               | 13px (workbench), 11px (HTML body) |
-| Line height                  | 1.4em                              |
-| Validation message font-size | 12px (line-height: 17px)           |
+| Element | Size |
+|---------|------|
+| Part title height | 35px |
+| Title padding (horizontal) | 8px |
+| Title label inner padding | 12px |
+| Action area padding | 5px |
+| Action icon size | 16px |
+| Body font-size | 13px (workbench), 11px (HTML body) |
+| Line height | 1.4em |
+| Validation message font-size | 12px (line-height: 17px) |
 
 > For `padding`/`margin`/`gap`, `border-radius`, `font-size`/`font-weight`, codicon size and border width, prefer the design-system **size tokens** over raw px — see [§10 Design-System Size Tokens](#10-design-system-size-tokens-spacing-radius-font-codicon-stroke). Canonical reference: `.github/instructions/design-tokens.instructions.md` (auto-injected for `src/vs/**/*.css`).
 
+
 ## 4. CSS Selector Quality
 
-| Anti-pattern (flagged)                               | Correct pattern                |
-| ---------------------------------------------------- | ------------------------------ |
-| ID selectors for styling (`#my-widget`)              | Class selectors (`.my-widget`) |
-| Overly specific selectors                            | Minimal specificity needed     |
-| Styles in the wrong file                             | Co-located with the component  |
-| Missing `min-width: 0` on flex children              | Prevents truncation issues     |
-| Forgetting `pointer-events: none` on hidden overlays | Prevents click-through bugs    |
+| Anti-pattern (flagged) | Correct pattern |
+|------------------------|-----------------|
+| ID selectors for styling (`#my-widget`) | Class selectors (`.my-widget`) |
+| Overly specific selectors | Minimal specificity needed |
+| Styles in the wrong file | Co-located with the component |
+| Missing `min-width: 0` on flex children | Prevents truncation issues |
+| Forgetting `pointer-events: none` on hidden overlays | Prevents click-through bugs |
 
 ### Never Add New `!important`
 
 Do not introduce `!important` in new or modified CSS. When a declaration loses the cascade, inspect the competing selector and increase specificity with the smallest appropriate component, workbench, or state-class prefix instead. Existing `!important` declarations may be preserved and must not be removed mechanically during unrelated edits. Do not copy them, add new ones, or use them to avoid understanding selector ownership.
 
 The narrow exception is shared focus/active-outline suppression, where `outline: 0 !important` is intentionally used to override native or global focus indicators and prevent flashing outlines during pointer activation. Keep this exception scoped to focus-indicator behavior; feature styling must still resolve cascade conflicts through selector specificity.
+
+Represent semantic state explicitly rather than inferring it from incidental DOM order. For example, a content node ceasing to be `:last-child` does not prove a footer exists: completion widgets can append siblings and leave them mounted while hidden. Let the component that creates/removes the footer own its state class, and test unrelated trailing siblings.
 
 ## 5. SplitView Layout
 
@@ -77,20 +79,18 @@ For splitting views with draggable sashes (either horizontal or vertical):
 
 ```typescript
 const splitView = new SplitView(container, {
-  orientation: Orientation.VERTICAL,
-  proportionalLayout: true,
-  styles: { separatorBorder: asCssVariable(sashBorder) },
+    orientation: Orientation.VERTICAL,
+    proportionalLayout: true,
+    styles: { separatorBorder: asCssVariable(sashBorder) }
 });
 
 // Each view implements IView:
 const myView: IView = {
-  element: myDomNode,
-  minimumSize: 100,
-  maximumSize: Number.POSITIVE_INFINITY,
-  onDidChange: Event.None,
-  layout(size, offset) {
-    /* resize content */
-  },
+    element: myDomNode,
+    minimumSize: 100,
+    maximumSize: Number.POSITIVE_INFINITY,
+    onDidChange: Event.None,
+    layout(size, offset) { /* resize content */ }
 };
 
 splitView.addView(myView, Sizing.Distribute);
@@ -103,7 +103,6 @@ Use `LayoutPriority.High` / `.Low` to control which views resize first when spac
 **File**: `src/vs/base/browser/ui/grid/grid.ts`
 
 For 2D layouts (used by editor groups):
-
 ```typescript
 const grid = new Grid(initialView);
 grid.addView(newView, Sizing.Distribute, referenceView, Direction.Right);
@@ -113,21 +112,27 @@ grid.addView(newView, Sizing.Distribute, referenceView, Direction.Right);
 
 Three classes for different needs:
 
-| Class                     | When to Use                                            |
-| ------------------------- | ------------------------------------------------------ |
-| `SmoothScrollableElement` | Animated scrolling (SplitView, ListView)               |
-| `DomScrollableElement`    | Wrap existing DOM content (hovers, menus, breadcrumbs) |
-| `ScrollableElement`       | Basic single-direction scrollbar                       |
+| Class | When to Use |
+|-------|-------------|
+| `SmoothScrollableElement` | Animated scrolling (SplitView, ListView) |
+| `DomScrollableElement` | Wrap existing DOM content (hovers, menus, breadcrumbs) |
+| `ScrollableElement` | Basic single-direction scrollbar |
 
 ```typescript
 const scrollable = new DomScrollableElement(contentNode, {
-  horizontal: ScrollbarVisibility.Auto,
-  vertical: ScrollbarVisibility.Auto,
+    horizontal: ScrollbarVisibility.Auto,
+    vertical: ScrollbarVisibility.Auto
 });
 this._register(scrollable);
 container.appendChild(scrollable.getDomNode());
 scrollable.scanDomNode(); // call after content changes
 ```
+
+Keep scroll handlers lightweight: batch layout reads before writes, coalesce duplicate measurements, and skip unchanged CSSOM writes. Cache numeric values rather than comparing rounded style strings. Validate both unchanged scrolling and resizing that changes appearance without changing the item count.
+
+For content-sized lists and trees, distinguish logical item height from the complete scroll extent. Horizontal-scrollbar reservation can make `scrollHeight` larger than `contentHeight`; size a floating host from the extent it must actually display, with its own chrome accounted for separately. Test horizontal scrolling enabled and disabled.
+
+Verify actual scrollbar dragging and pointer acquisition after changing margins or clipping. In maximized/fullscreen layouts, check screen-edge hit regions as well as visual placement; an inset control must not become unnecessarily difficult to acquire.
 
 ## 8. Responsive Layout
 
@@ -135,15 +140,30 @@ VS Code does **not** use CSS media queries. Instead, it uses a **programmatic co
 
 - `IView.minimumSize` / `maximumSize` — views declare their size constraints.
 - `SplitView` and `Grid` distribute space according to constraints and `LayoutPriority`.
-- `ResizeObserver` is used for container-aware sizing (e.g., editor auto-layout).
+- `dom.DisposableResizeObserver` (not a raw `ResizeObserver`) is used for container-aware sizing (e.g., editor auto-layout).
 - The window is treated as a fixed viewport; space is distributed via sash-based resizing.
 
 When building a responsive component:
-
 1. Set `minimumSize` / `maximumSize` appropriately.
 2. Use `LayoutPriority.Low` for panels that should collapse first.
 3. Use `snap: true` for panels that should snap closed when too small.
 4. Fire `onDidChange` when your constraints change dynamically.
+
+Validate layout at the boundaries where dimensions are consumed:
+
+- Keep grid allocation, CSS margins/borders, and child-content dimensions consistent. Exercise the real `layout()` path and inspect both root bounds and dimensions passed to children; helper values and outer screenshots alone cannot prove content fits.
+- Read current viewport and density state during layout rather than relying solely on constructor-selected behavior. Test transitions in both directions on the same instance, including collapse/expand and narrow/wide layouts, without shifting unrelated siblings.
+- Use existing screen-aware sizing helpers and the target window's effective pixel ratio for fractional scaling. Zoom alone is not device pixel ratio. Check margins, borders, and gap symmetry in CSS coordinates and physical pixels instead of adding compensating pixels or arbitrary tolerances.
+- Keep startup/restored geometry aligned with runtime layout, including missing-state fallbacks. Check affected visibility, density, and window variants, and preserve intentional exclusions such as modal or auxiliary surfaces.
+- Keep inter-panel spacing separate from pane-internal padding, exterior gutters, and the frame's reserved stroke. Before changing a shared margin helper, inspect all consumers. Test zero, one-pixel, odd, and maximum supported gaps; small gaps cannot fund an unconditional inset on both sides.
+- Resolve configurable geometry consistently for CSS, numeric grid layout, startup paint, and auxiliary/native content. Clearing a customization must restore inheritance. Preserve resolved appearance when stale saved bounds are discarded; invalid geometry does not necessarily invalidate the user's size preferences.
+- Refresh derived sash endpoints and gripper placement after grid topology changes such as moving or aligning a panel, not only after a window resize. Check odd-gap centers, newly created sashes, and removal of stale state when returning to compact or gapless layouts.
+
+### Floating and docked surfaces
+
+- Capture the visible shared grid node's dimensions before hiding it, even when one of its logical children is already hidden. Verify resize, close/reopen, reload, and orientation changes, preserving separate width preferences where horizontal and stacked layouts intentionally differ.
+- Derive detached-window frames from that window's own insets and visible layout, not mirrored main-window classes. Include main/detached combinations that disagree about visible editors or tab counts.
+- Exercise hover-preview, pin/unpin, focus transfer into nested popups, deferred blur, and pointer exit through the production controller. A queued blur must not consume a newly started exit grace period. Use controlled timers to verify ordering instead of increasing delays, and restore docked sizing/padding when floating mode ends.
 
 ## 9. Text Overflow & Ellipsis
 
@@ -155,26 +175,26 @@ The three-property combo is required — all three must be present:
 
 ```css
 .my-label {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
 }
 ```
 
 ### Common Locations That Need Ellipsis
 
-| Element                               | Why                                                  |
-| ------------------------------------- | ---------------------------------------------------- |
+| Element | Why |
+|---------|-----|
 | Part title labels (`h2`, breadcrumbs) | Sidebar/panel can be resized narrower than the title |
-| View pane header titles               | View containers can be narrow                        |
-| List/tree row labels                  | Rows have a fixed width from the list container      |
-| Tab labels (editor tabs)              | Many tabs shrink to fit                              |
-| Button labels in welcome views        | Buttons have `max-width` constraints                 |
-| Status bar items                      | Many items compete for horizontal space              |
-| Notification message text             | Notification toast/center has fixed width            |
-| Tooltip/hover headings                | Hovers have max-width                                |
-| Dropdown/select items                 | Select boxes have bounded width                      |
-| Badge text / descriptions             | Auxiliary text in constrained columns                |
+| View pane header titles | View containers can be narrow |
+| List/tree row labels | Rows have a fixed width from the list container |
+| Tab labels (editor tabs) | Many tabs shrink to fit |
+| Button labels in welcome views | Buttons have `max-width` constraints |
+| Status bar items | Many items compete for horizontal space |
+| Notification message text | Notification toast/center has fixed width |
+| Tooltip/hover headings | Hovers have max-width |
+| Dropdown/select items | Select boxes have bounded width |
+| Badge text / descriptions | Auxiliary text in constrained columns |
 
 ### Flex Container Gotchas
 
@@ -183,20 +203,20 @@ Flex children default to `min-width: auto`, which **prevents** `text-overflow: e
 ```css
 /* WRONG — ellipsis will NOT trigger inside a flex container */
 .flex-parent {
-  display: flex;
+	display: flex;
 }
 .flex-parent > .label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 /* CORRECT — add min-width: 0 so the flex item can shrink */
 .flex-parent > .label {
-  min-width: 0; /* ← this is the fix */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+	min-width: 0;          /* ← this is the fix */
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 ```
 
@@ -208,22 +228,22 @@ When a row has both fixed-size elements (icons, action buttons) and flexible tex
 
 ```css
 .row {
-  display: flex;
-  align-items: center;
+	display: flex;
+	align-items: center;
 }
 .row > .icon {
-  flex-shrink: 0; /* icon never shrinks */
-  width: 16px;
+	flex-shrink: 0;        /* icon never shrinks */
+	width: 16px;
 }
 .row > .label {
-  flex: 1; /* label takes remaining space */
-  min-width: 0; /* allows shrinking below content width */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+	flex: 1;               /* label takes remaining space */
+	min-width: 0;          /* allows shrinking below content width */
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 .row > .actions {
-  flex-shrink: 0; /* action buttons never shrink */
+	flex-shrink: 0;        /* action buttons never shrink */
 }
 ```
 
@@ -234,22 +254,36 @@ This is the standard pattern for tree rows, list items, tab labels, and view pan
 When text is truncated with ellipsis, the **full text must be accessible** via hover tooltip. Use `IHoverService.setupDelayedHover()` with the full untruncated text so users can read it:
 
 ```typescript
-this._register(
-  this.hoverService.setupDelayedHover(labelElement, {
-    content: fullLabelText,
-  }),
-);
+this._register(this.hoverService.setupDelayedHover(labelElement, {
+	content: fullLabelText,
+}));
 ```
 
 For `IconLabel` and list/tree renderers, this is handled automatically. For custom DOM, you must add it manually.
 
 ### Anti-Patterns (NEVER DO)
 
-- **Never** let text clip without an ellipsis — if `overflow: hidden` is set, `text-overflow: ellipsis` must also be set.
+- **Never** let single-line text labels clip without an ellipsis. This rule applies to labels, not structural clipping containers or overflow masks.
 - **Never** rely on a fixed pixel width for text that could be localized — localized strings vary in length.
 - **Never** use `text-overflow: ellipsis` without `overflow: hidden` and `white-space: nowrap` — all three are required.
 - **Never** forget `min-width: 0` on flex children that need to truncate.
 - **Never** truncate text without providing a hover/tooltip for the full string.
+
+### Clipping and Alignment
+
+- Measure content items separately from adjacent actions and toolbars. Recalculate clipping when labels, status indicators, or actions change width, even if the viewport is unchanged.
+- Check first/last and partially visible items with long labels and combined hover/focus/selection states. Masks must not cover actions or scroll hit targets. Recreated overflow edges must preserve the source edge's shape and border state, and clear stale state when clipping ends.
+- Keep hover/focus geometry stable so controls do not jump under the pointer. Test state transitions on existing elements as well as fresh renders.
+- Define which semantic value should align in compound badges or labels. Centering a variable-width string does not preserve the alignment of its trailing status; compare short and long compound values alongside single-value rows.
+
+### Rounded-surface geometry
+
+- Trace the painted perimeter through the production ancestors before changing a radius or overflow rule. Identify the owner of the frame stroke, content paint, material layer, connected cap, and overlays. A child can report the correct radius while an ancestor clips its outline or content paints over it.
+- Match the reference boxes as well as the radius. A pseudo-element positioned inside a host border does not share the host's outer curve merely because it inherits `border-radius`. Use the appropriate border/padding-box geometry; for unequal or elliptical corners, prefer browser-resolved curves over a uniform subtraction.
+- Do not repair an obscured corner by clipping the entire content subtree. Progress indicators and fixed completion widgets may intentionally escape it, and transforms or filters can change fixed-position containing blocks. Isolate decorative paint from interactive content and preserve overlay stacking and hit targets.
+- Repainting an edge must not create a second, inset frame or double-paint a translucent stroke. Align the replacement paint to the original frame and verify the composited result at all exposed corners, including square corners. A computed radius or an overlay hit test alone cannot prove the perimeter is correct.
+- Derive connected caps, clipping fallbacks, and nested frames from the owning surface's semantic radius and effective inset, not a generic default. Honor square/custom radii, asymmetric Activity Bar seams, footer presence, and native window overrides. Check both header and footer ancestors when the Activity Bar can move.
+- Verify painted outlines and overlay interactions in the affected browser engines. Include short/narrow panes, retained hidden overlay siblings, footer add/remove, fractional scaling, and the relevant maximized/fullscreen/native-window states. Keep native-platform evidence distinct from a web-only reproduction.
 
 ---
 
@@ -257,7 +291,7 @@ For `IconLabel` and list/tree renderers, this is handled automatically. For cust
 
 VS Code ships a design-system **size** ramp, registered in `src/vs/platform/theme/common/sizes/baseSizes.ts` and emitted as `--vscode-*` CSS variables. When writing or editing CSS, prefer the token var over a raw px value wherever a token exists. The full tables + rationale live in the auto-injected `.github/instructions/design-tokens.instructions.md` (canonical source — keep this section in sync with it). This section captures the **decision logic** for deeper styling tasks.
 
-> Every `--vscode-*` size var you reference must already exist in `build/lib/stylelint/vscode-known-variables.json` (`"sizes"` array, alphabetically sorted) or stylelint/hygiene fails. Adding a _new_ token means adding it both in `baseSizes.ts` and that JSON file.
+> Every `var()` you reference, except product-icon `--vscode-icon-*-content` and `--vscode-icon-*-font-family` variables, must exist in `build/lib/stylelint/vscode-known-variables.json` or stylelint/hygiene fails. After registering a *new* token in `baseSizes.ts`, run `./scripts/test-documentation.sh` to regenerate the `"sizes"` array; CSS-only custom properties belong in `"others"`.
 
 ### Spacing — `padding`, `margin`, `gap`
 
@@ -267,13 +301,13 @@ Scale (px): `0, 2, 4, 6, 8, 10, 12, 16, 20, 24, 28, 32, 36, 40` → `--vscode-sp
 
 ### Corner radius — `border-radius`
 
-| px   | Variable                       | Use                         |
-| ---- | ------------------------------ | --------------------------- |
-| 2    | `--vscode-cornerRadius-xSmall` | very compact elements       |
-| 4    | `--vscode-cornerRadius-small`  | controls (buttons, inputs)  |
-| 6    | `--vscode-cornerRadius-medium` | base / inner surfaces       |
-| 8    | `--vscode-cornerRadius-large`  | prominent / outer surfaces  |
-| 12   | `--vscode-cornerRadius-xLarge` | very prominent surfaces     |
+| px | Variable | Use |
+|----|----------|-----|
+| 2  | `--vscode-cornerRadius-xSmall` | very compact elements |
+| 4  | `--vscode-cornerRadius-small` | controls (buttons, inputs) |
+| 6  | `--vscode-cornerRadius-medium` | base / inner surfaces |
+| 8  | `--vscode-cornerRadius-large` | prominent / outer surfaces |
+| 12 | `--vscode-cornerRadius-xLarge` | very prominent surfaces |
 | 9999 | `--vscode-cornerRadius-circle` | fully rounded (pills, dots) |
 
 **Snap map** for off-scale literals (ties round **up**): `2→xSmall`, `3,4→small`, `5,6→medium`, `7,8→large`, `10,11,12→xLarge`, `14,16,18,20→xLarge`, `999→circle`.
@@ -281,20 +315,24 @@ Scale (px): `0, 2, 4, 6, 8, 10, 12, 16, 20, 24, 28, 32, 36, 40` → `--vscode-sp
 - **Pills** (radius ≈ half the element height — e.g. `28h`/`14r`, `36h`/`18r`, `22×22`/`11r`) → `--vscode-cornerRadius-circle`, **not** xLarge. The literal-nearest token would square them and lose the fully-rounded intent.
 - **Leave untouched:** `50%`, `0`, `0px`, `inherit`, any `calc()`/`var()`. Preserve `!important`.
 
+The ramp describes generic design defaults, not a replacement for component-specific geometry. When a panel exposes a semantic size customization, its frame and dependent paint must consume that resolved value, including `0`, rather than snapping it back to a generic radius. Keep native-window radii and control/overlay tiers separate from panel preferences.
+
+At supported standalone or fixture boundaries where size tokens may be absent, provide valid length fallbacks for required padding, insets, radii, and outlines. A `var()` fallback handles an unavailable custom property, not a defined value of the wrong type or a unitless length. Follow the existing host contract rather than adding speculative fallbacks to every token.
+
 ### Font size & weight
 
 Generic UI ramp — pair a **size** token with a **weight** token ("Strong" = matching size token + `semiBold`, never a separate size):
 
-| px  | Size var                     | Weight   |
-| --- | ---------------------------- | -------- |
-| 26  | `--vscode-fontSize-heading1` | semiBold |
-| 18  | `--vscode-fontSize-heading2` | semiBold |
-| 13  | `--vscode-fontSize-heading3` | semiBold |
-| 13  | `--vscode-fontSize-body1`    | regular  |
-| 11  | `--vscode-fontSize-body2`    | regular  |
-| 12  | `--vscode-fontSize-label1`   | regular  |
-| 11  | `--vscode-fontSize-label2`   | regular  |
-| 10  | `--vscode-fontSize-label3`   | regular  |
+| px | Size var | Weight |
+|----|----------|--------|
+| 26 | `--vscode-fontSize-heading1` | semiBold |
+| 18 | `--vscode-fontSize-heading2` | semiBold |
+| 13 | `--vscode-fontSize-heading3` | semiBold |
+| 13 | `--vscode-fontSize-body1` | regular |
+| 11 | `--vscode-fontSize-body2` | regular |
+| 12 | `--vscode-fontSize-label1` | regular |
+| 11 | `--vscode-fontSize-label2` | regular |
+| 10 | `--vscode-fontSize-label3` | regular |
 
 Generic weights: `--vscode-fontWeight-regular` (400), `--vscode-fontWeight-semiBold` (600).
 
@@ -303,17 +341,17 @@ Generic weights: `--vscode-fontWeight-regular` (400), `--vscode-fontWeight-semiB
 The legacy Agents-specific `--vscode-agents-fontSize-*` and `--vscode-agents-fontWeight-*` tokens are also deprecated; use the matching generic tokens.
 
 - **No medium (500).** `font-weight: 500` is off the ramp — snap to `semiBold`. Likewise `700`/`bold` → round to the nearer of 400/600.
-- **"Strong" is not a separate size.** "Body 1 Strong" = the matching `--vscode-fontSize-*` size token + `semiBold`. Never add a strong _size_.
+- **"Strong" is not a separate size.** "Body 1 Strong" = the matching `--vscode-fontSize-*` size token + `semiBold`. Never add a strong *size*.
 - `normal` ≡ 400 → `regular`. Leave `inherit`, `lighter`, `bolder`, `var()`/`calc()` untouched.
 
 ### Codicon size — icon `font-size`
 
 Codicons are **only ever 16px or 12px** — never `14px` or any in-between value.
 
-| px  | Variable                           | Use                 |
-| --- | ---------------------------------- | ------------------- |
-| 16  | `--vscode-codiconFontSize` (base)  | default icon size   |
-| 12  | `--vscode-codiconFontSize-compact` | dense/inline chrome |
+| px | Variable | Use |
+|----|----------|-----|
+| 16 | `--vscode-codiconFontSize` (base) | default icon size |
+| 12 | `--vscode-codiconFontSize-compact` | dense/inline chrome |
 
 **Compact-glyph convention:** when sizing an icon at the compact 12px size, also swap the registered glyph to its `*Compact` variant (e.g. `Codicon.close` → `Codicon.closeCompact`, `Codicon.add` → `Codicon.addCompact`). CSS `font-size` alone only scales the icon — it does **not** change to the visually-optimized compact glyph; that requires changing the registered icon (Action2 `icon:` / `renderIcon`). **Only swap the glyph when no CSS selector targets the original glyph class** (e.g. `.codicon-close`); selectors keyed on the glyph class (`.codicon-add`, `.codicon-chevron-down`) break when the class becomes `-compact`, so update those selectors too (or size via a glyph-independent wrapper class like `.monaco-button`). Some icons (settings/sliders, agent, vm, info, lock, plus) have **no** compact variant — keep the regular glyph at 12px.
 
@@ -322,19 +360,17 @@ Codicons are **only ever 16px or 12px** — never `14px` or any in-between value
 A **single** stroke thickness: `1px` → `--vscode-strokeThickness`. Applies to the `border: 1px solid <color>` shorthand and `border-width: 1px`. Other widths have no token — leave them.
 
 ```css
-/* prefer */
-border: var(--vscode-strokeThickness) solid var(--vscode-widget-border);
-/* avoid  */
-border: 1px solid var(--vscode-widget-border);
+/* prefer */  border: var(--vscode-strokeThickness) solid var(--vscode-widget-border);
+/* avoid  */  border: 1px solid var(--vscode-widget-border);
 ```
 
 ---
 
 ## Key Files
 
-| Area                    | File                                                    |
-| ----------------------- | ------------------------------------------------------- |
-| SplitView               | `src/vs/base/browser/ui/splitview/splitview.ts`         |
-| Grid                    | `src/vs/base/browser/ui/grid/grid.ts`                   |
-| Scrollbar               | `src/vs/base/browser/ui/scrollbar/scrollableElement.ts` |
-| Global workbench styles | `src/vs/workbench/browser/media/style.css`              |
+| Area | File |
+|------|------|
+| SplitView | `src/vs/base/browser/ui/splitview/splitview.ts` |
+| Grid | `src/vs/base/browser/ui/grid/grid.ts` |
+| Scrollbar | `src/vs/base/browser/ui/scrollbar/scrollableElement.ts` |
+| Global workbench styles | `src/vs/workbench/browser/media/style.css` |

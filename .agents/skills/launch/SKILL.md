@@ -14,7 +14,7 @@ You're working on VS Code itself and you want to:
 
 This skill provides a launcher that clones an authenticated user-data-dir to a throwaway temp folder, picks free ports for every debug surface, and prints them as JSON so you can pick them up programmatically.
 
-The clone is **slim**: workspace storage, browser caches, file history, cached VSIX backups, and old logs are excluded by default. On macOS, auth tokens live in the OS keychain plus small files inside `User/globalStorage` - both of which _are_ preserved. On Windows the GitHub session lives in the **shared-data-dir** instead, which the launcher seeds separately (see [Windows authentication](#windows-authentication)).
+The clone is **slim**: workspace storage, browser caches, file history, cached VSIX backups, and old logs are excluded by default. On macOS, auth tokens live in the OS keychain plus small files inside `User/globalStorage` - both of which *are* preserved. On Windows the GitHub session lives in the **shared-data-dir** instead, which the launcher seeds separately (see [Windows authentication](#windows-authentication)).
 
 ## Prerequisites
 
@@ -25,13 +25,14 @@ The clone is **slim**: workspace storage, browser caches, file history, cached V
     fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression
     fnm use   # picks up the repo's .nvmrc
     ```
-- A VS Code checkout with `node_modules/` installed (`npm install` if missing — do **not** symlink from a sibling worktree; that breaks builds in subtle ways).
-- A VS Code checkout with sources built. Run `npm run compile` once (one-shot) or `npm run watch` for incremental rebuilds. Both build the full client **and** all built-in extensions under `extensions/`. You must build the full product to run successfully, building just the client is not enough.
-  - The launcher compiles only when outputs are missing; it does **not** detect stale dependencies or `out/` files. After pulling, switching branches, or changing dependency manifests, run `npm install` when needed and rebuild before launching.
+- A VS Code checkout with `node_modules/` installed (`pnpm install` if missing — do **not** symlink from a sibling worktree; that breaks builds in subtle ways).
+- A VS Code checkout with sources built. Run `pnpm run compile` once (one-shot) or `pnpm run watch` for incremental rebuilds. Both build the full client **and** all built-in extensions under `extensions/`. You must build the full product to run successfully, building just the client is not enough.
+  - The launcher compiles only when outputs are missing; it does **not** detect stale dependencies or `out/` files. After pulling, switching branches, or changing dependency manifests, run `pnpm install` when needed and rebuild before launching.
 - An authenticated Code OSS profile is recommended but not required. By default the launcher tries to seed from `~/.vscode-oss-dev` on macOS/Linux or `$env:USERPROFILE\.vscode-oss-dev` on Windows, which is the user-data-dir the repo's `launch.json` configs use. Only pass `--source-user-data-dir <path>` (or set `$CODE_OSS_DEV_AUTHED_USER_DATA_DIR`) when you specifically want to seed from a different profile (e.g. your regular `~/Library/Application Support/Code` install). If the source profile is missing, the launcher continues with an empty isolated profile.
-- `@playwright/cli` available (it's a devDependency in the vscode repo - `npm install` then use `npx @playwright/cli`).
+- `@playwright/cli` available (it's a devDependency in the vscode repo - `pnpm install` then use `npx @playwright/cli`).
 - For debugger work: `dap-cli` on `PATH`. If debugger support would be useful but the `dap-cli` skill is not present, prompt the user to install it from https://github.com/roblourens/dap-cli.
 - CSS selectors are internal implementation details. If a selector-based `eval` stops working, take a fresh `snapshot`, inspect the current DOM, and update the selector rather than assuming an old one still applies.
+- Code OSS cannot be launched or driven from a sandboxed agent terminal. On Windows the sandbox either cannot start without local network access or the launcher fails with `[launch.ps1] Access is denied`; enabling local network access alone is not enough. If your shell tool can request unsandboxed execution, use that for the launcher, `@playwright/cli`, and cleanup. Otherwise, before launching, ask the user once to turn off terminal sandboxing for this session (Permissions picker → "Sandboxing for terminal") and continue after they confirm.
 
 > The launcher **copies** the source profile to a temp dir and never mutates the original. Each launch gets its own isolated `--user-data-dir` and `--extensions-dir`.
 
@@ -123,14 +124,14 @@ The exclude list mirrors the one used by VS Code's own perf-test skill (`.github
 
 #### Windows authentication
 
-Windows has no shared per-app keychain for these secrets, so they live in files on disk - but **not all in the user-data-dir**. The GitHub session is stored at `StorageScope.APPLICATION_SHARED` _only on Windows_ (see `useSharedStorage` and `CROSS_APP_SHARED_SECRET_KEYS` in `src/vs/platform/secrets/common/secrets.ts`), which puts the two halves of the credential in **different directories**:
+Windows has no shared per-app keychain for these secrets, so they live in files on disk - but **not all in the user-data-dir**. The GitHub session is stored at `StorageScope.APPLICATION_SHARED` *only on Windows* (see `useSharedStorage` and `CROSS_APP_SHARED_SECRET_KEYS` in `src/vs/platform/secrets/common/secrets.ts`), which puts the two halves of the credential in **different directories**:
 
-| Piece                                                   | Location                                      |
-| ------------------------------------------------------- | --------------------------------------------- |
-| Encrypted GitHub session blob                           | `<shared-data-dir>/sharedStorage/state.vscdb` |
-| DPAPI-wrapped decryption key (`os_crypt.encrypted_key`) | `<user-data-dir>/Local State`                 |
+| Piece | Location |
+|---|---|
+| Encrypted GitHub session blob | `<shared-data-dir>/sharedStorage/state.vscdb` |
+| DPAPI-wrapped decryption key (`os_crypt.encrypted_key`) | `<user-data-dir>/Local State` |
 
-The launcher therefore seeds **both**: it copies the source profile _and_ copies the source shared-data-dir into the run's throwaway `shared-data` dir. The source resolves the same way `IEnvironmentService.appSharedDataHome` does - `$env:CODE_OSS_DEV_AUTHED_SHARED_DATA_DIR` if set, else `$env:VSCODE_PORTABLE\shared-data` when running portable, else `~/<product.sharedDataFolderName>` (i.e. `%USERPROFILE%\.vscode-oss-shared`). It also verifies `Local State`, `machineid`, and `Network` survived the profile copy, and warns on stderr if neither database holds a GitHub session.
+The launcher therefore seeds **both**: it copies the source profile *and* copies the source shared-data-dir into the run's throwaway `shared-data` dir. The source resolves the same way `IEnvironmentService.appSharedDataHome` does - `$env:CODE_OSS_DEV_AUTHED_SHARED_DATA_DIR` if set, else `$env:VSCODE_PORTABLE\shared-data` when running portable, else `~/<product.sharedDataFolderName>` (i.e. `%USERPROFILE%\.vscode-oss-shared`). It also verifies `Local State`, `machineid`, and `Network` survived the profile copy, and warns on stderr if neither database holds a GitHub session.
 
 > This asymmetry is invisible on macOS/Linux, where the same token lands inside the profile. A Windows-only "always signed out" symptom is a shared-data-dir problem, **not** a profile problem: signing in against the source profile writes a perfectly good session, but before this seeding existed every launch handed Code OSS an empty shared dir and threw it away.
 
@@ -139,7 +140,6 @@ The bootstrap script writes the session blob to `%USERPROFILE%\.vscode-oss-share
 > Profiles that predate the `APPLICATION_SHARED` migration can still hold the secret in `User/globalStorage/state.vscdb`. `ApplicationSharedStorageMain` registers application storage as a read fallback, so those profiles authenticate even with no shared-data-dir present - which is why a missing shared dir is reported as a fact rather than assumed fatal.
 
 Excluded (transient, regenerable, or known-not-needed):
-
 - `User/workspaceStorage/` - per-workspace state, **including stored chat sessions** (often multi-GB)
 - `User/History/` - local file edit history
 - `CachedExtensionVSIXs` - backup VSIXs (hundreds of MB)
@@ -159,26 +159,7 @@ The script runs pre-launch (electron download, compile-if-missing, built-in exte
 For repeated launches of the same prepared build, pass `--skip-prelaunch` after one successful normal launch. Only use it while a watch task keeps all output current or neither sources nor build outputs have changed; otherwise the new instance may run stale or incomplete code.
 
 ```json
-{
-  "pid": 12345,
-  "cdpPort": 53111,
-  "extHostPort": 53112,
-  "mainPort": 53113,
-  "agentHostPort": 53114,
-  "userDataDir": ".../user-data",
-  "extensionsDir": ".../extensions",
-  "sharedDataDir": ".../shared-data",
-  "runDir": "...",
-  "logFile": ".../code.log",
-  "repo": "...",
-  "agents": false,
-  "timings": {
-    "profileMs": 231,
-    "preLaunchMs": 251,
-    "cdpReadyMs": 459,
-    "totalMs": 941
-  }
-}
+{"pid":12345,"cdpPort":53111,"extHostPort":53112,"mainPort":53113,"agentHostPort":53114,"userDataDir":".../user-data","extensionsDir":".../extensions","sharedDataDir":".../shared-data","runDir":"...","logFile":".../code.log","repo":"...","agents":false,"timings":{"profileMs":231,"preLaunchMs":251,"cdpReadyMs":459,"totalMs":941}}
 ```
 
 The additive `timings` object uses monotonic elapsed time to identify time spent preparing the isolated profile, running pre-launch, and starting Code OSS through CDP readiness. `totalMs` covers the complete launcher operation through readiness.
@@ -209,16 +190,16 @@ $pid = $info.pid
 
 ### What each port is for
 
-| Port                                    | Process                         | Use with                                         |
-| --------------------------------------- | ------------------------------- | ------------------------------------------------ |
-| `cdpPort` (`--remote-debugging-port`)   | Renderer (the workbench window) | `@playwright/cli` over CDP, also Chrome DevTools |
-| `extHostPort` (`--inspect-extensions`)  | Extension host (Node)           | `dap-cli` (Node inspector protocol)              |
-| `mainPort` (`--inspect`)                | Electron main process (Node)    | `dap-cli` (Node inspector protocol)              |
-| `agentHostPort` (`--inspect-agenthost`) | Agent host process (Node)       | `dap-cli` (Node inspector protocol)              |
+| Port | Process | Use with |
+|------|---------|----------|
+| `cdpPort` (`--remote-debugging-port`) | Renderer (the workbench window) | `@playwright/cli` over CDP, also Chrome DevTools |
+| `extHostPort` (`--inspect-extensions`) | Extension host (Node) | `dap-cli` (Node inspector protocol) |
+| `mainPort` (`--inspect`) | Electron main process (Node) | `dap-cli` (Node inspector protocol) |
+| `agentHostPort` (`--inspect-agenthost`) | Agent host process (Node) | `dap-cli` (Node inspector protocol) |
 
 ## Drive the UI with @playwright/cli
 
-Use the dynamic `cdpPort` from the launch JSON. The normal loop is: attach, confirm the target, snapshot, interact, then re-snapshot after meaningful UI changes.
+Use the dynamic `cdpPort` from the launch JSON. The normal loop is: attach, confirm the target, inspect a screenshot, snapshot, interact, then re-snapshot after meaningful UI changes.
 
 If you are unsure about Playwright CLI syntax, run `npx @playwright/cli --help` or `npx @playwright/cli <command> --help` instead of guessing option names.
 
@@ -247,6 +228,12 @@ npx @playwright/cli -s=$PW_SESSION snapshot
 ```
 
 If a target looks stale after relaunching, run `npx @playwright/cli -s=$PW_SESSION close`, attach again with `$CDP`, and re-check `tab-list`.
+
+### Inspect the launched window before proceeding
+
+After every launch or relaunch, once the intended window has rendered, take a screenshot and open it with an image-viewing tool. Visually check that the expected surface, text, icons, and layout are intact **before interacting with the app or asking the user to sign in**. Saving a screenshot without inspecting it, reading a DOM/accessibility snapshot, or reaching the CDP endpoint does not satisfy this check.
+
+If the screenshot shows missing icons, blank content, or visibly broken layout, stop the scenario and investigate the observed problem before proceeding. After repair, relaunch and inspect again; do not wait for the user to point out the broken UI.
 
 ### Focusing the chat input
 
@@ -317,7 +304,6 @@ The script returns `{ focused, focusChanged, focusInvoked, shortcutInvoked, comm
   3. Monaco updates its DOM **asynchronously** after a paste event — a synchronous read-back inside the same `eval` returns stale state. The helper polls rendered view lines across paint cycles until the pasted prefix appears or verification times out.
 
 - **Per-key `press`** (universal but slow — each press is a separate CLI invocation with Node startup cost):
-
   ```bash
   npx @playwright/cli -s=$PW_SESSION press H
   npx @playwright/cli -s=$PW_SESSION press i
@@ -371,11 +357,11 @@ The Agents window does not use the regular workbench `.interactive-input-editor`
 
 ```js
 // Regular-workbench-specific selector; do not assume this exists in Agents.
-document.querySelectorAll(".interactive-input-editor .view-line");
+document.querySelectorAll('.interactive-input-editor .view-line')
 
 // More useful checks in Agents.
-document.querySelectorAll(".view-line");
-document.activeElement?.matches(".native-edit-context, textarea.inputarea");
+document.querySelectorAll('.view-line')
+document.activeElement?.matches('.native-edit-context, textarea.inputarea')
 ```
 
 The focus script accounts for these DOM differences and prioritizes the active Agents session.
@@ -426,6 +412,14 @@ npx @playwright/cli -s=$PW_SESSION screenshot e42 --filename="$SHOTS/panel.png"
 
 On macOS, a screenshot "Permission denied" failure usually means the terminal lacks Screen Recording permission. Use text/state verification while resolving that permission issue.
 
+### Recording a video
+
+To record a demo video, use the attached session as the Playwright `page` for a general `page.screencast` recording workflow:
+
+- Write the whole scenario, including `page.screencast.start()` and `stop()`, as a bare `async page => { ... }` function in a file and run it with a single `npx @playwright/cli -s=$PW_SESSION run-code --filename=<file>` call. `page` is the attached workbench window.
+- Keep typed text short. Typing into Monaco key by key is visible but slow: about 400 characters produced a nearly four-minute video. Paste long setup text before recording starts.
+- To run a command, press `F1`, fill the `Type the name of a command to run.` textbox with `>Command Name`, and click the exact matching option. The list updates asynchronously, so pressing `Enter` right after filling can run a stale result.
+
 ## Debug with dap-cli
 
 To set breakpoints in VS Code source while the window is running, attach `dap-cli` to one of the ports. If `dap-cli` would help but the corresponding skill is unavailable, prompt the user to install it from https://github.com/roblourens/dap-cli before continuing with debugger-specific steps.
@@ -443,7 +437,7 @@ You can run `@playwright/cli` and `dap-cli` against the **same window simultaneo
 
 Every launch picks fresh ports and a fresh temp `runDir`, so you can run as many concurrent Code OSS windows as your machine can handle. Each one's ports come back in its own JSON blob - keep them separate.
 
-The launcher also passes `--shared-data-dir=<runDir>/shared-data`. This is **required** for multi-instance isolation: Code OSS keeps a fixed-path SQLite DB at `~/.<dataFolderName>-shared/sharedStorage/state.vscdb` that is _not_ covered by `--user-data-dir`. Without overriding it, two concurrent instances would fight over the same file and one would die with "shared background process terminated unexpectedly". Each launch gets its own `shared-data` dir, **seeded from the source shared-data-dir** so the Windows GitHub session survives - see [Windows authentication](#windows-authentication) for why that copy matters.
+The launcher also passes `--shared-data-dir=<runDir>/shared-data`. This is **required** for multi-instance isolation: Code OSS keeps a fixed-path SQLite DB at `~/.<dataFolderName>-shared/sharedStorage/state.vscdb` that is *not* covered by `--user-data-dir`. Without overriding it, two concurrent instances would fight over the same file and one would die with "shared background process terminated unexpectedly". Each launch gets its own `shared-data` dir, **seeded from the source shared-data-dir** so the Windows GitHub session survives - see [Windows authentication](#windows-authentication) for why that copy matters.
 
 ## Restart after source changes
 
@@ -489,11 +483,12 @@ Code OSS is a full Electron app and easily eats 1-4 GB. Always clean up.
 
 ## Troubleshooting
 
+- **pnpm bootstrap fails on Windows** - check the actual Node/pnpm paths (`Get-Command node, pnpm -All`): stale shims can bypass fnm, and Corepack's bootstrap registry can differ from npm's configured registry. Select the Node version from `.nvmrc`; if Corepack remains blocked, install the pinned pnpm through the existing registry as described in [Contributing Fixes](../../../CONTRIBUTING.md#contributing-fixes).
 - **`Daemon pid=...: listen EINVAL` from `@playwright/cli`** - the daemon's socket path (`TMPDIR` + a fixed ~33-char prefix + the `-s=` session name) exceeded the ~103-byte unix socket limit. macOS's default `TMPDIR` leaves only ~16 characters for the session name, so shorten `-s=` first. If you need a longer name, scope the override to the single command (`TMPDIR=/tmp npx @playwright/cli ...`) rather than `export`ing it, so the launcher keeps using your private per-user temp dir.
 - **"Sent env to running instance. Terminating..."** - The dynamic `--user-data-dir` should prevent this. If you see it, another Code OSS is using the same profile path; pass `--source-user-data-dir` to a different source or check that the temp copy actually happened (`ls "$(node -p 'JSON.parse(process.argv[1]).userDataDir' "$INFO")"`).
 - **Renderer ESM errors / `import { Menu } from 'electron'`** - `ELECTRON_RUN_AS_NODE` is set in your env. The launcher unsets it for the child, but if you spawn `code.sh` yourself, do the same.
 - **`missing config value GIT_CONFIG_VALUE_*` from Git** - indexed Git configuration inherited from an agent runtime lost an empty value while the app processes were launched. The launcher unsets `GIT_CONFIG_COUNT` and `GIT_CONFIG_PARAMETERS` so host-only Git overrides do not affect Code OSS; do the same when invoking `code.sh` directly from such a runtime.
-- **Built-in extension fails to load (`Cannot find module .../extensions/.../out/extension.js`)** - extensions weren't compiled. Run `npm run compile` (one-shot, also rebuilds all built-in extensions) or `npm run watch` (incremental). A common cause: you ran `npm run transpile-client` to satisfy unit tests, which populated `out/` but not `extensions/*/out/`, so preLaunch's "is `out/` missing?" check skipped the compile.
+- **Built-in extension fails to load (`Cannot find module .../extensions/.../out/extension.js`)** - extensions weren't compiled. Run `pnpm run compile` (one-shot, also rebuilds all built-in extensions) or `pnpm run watch` (incremental). A common cause: you built only client output for unit tests (`pnpm run build-fast --client-only`), which populated `out/` but not `extensions/*/out/`, so preLaunch's "is `out/` missing?" check skipped the compile.
 - **`launch.sh` exits non-zero with a log tail** - either pre-launch failed, `code.sh` died before CDP came up, or CDP never opened within 90s. The tail printed to stderr is from `runDir/code.log` - read it to diagnose.
 - **Snapshot shows the wrong page or no expected controls** - use `tab-list`, switch with `tab-select <index>` if needed, then re-snapshot before interacting.
 - **CLI typing commands complete but the input stays empty** - run `playwrightScripts/focus-chat-input.ts`, use `press` or clipboard paste rather than `fill` / `type`, and verify the input state before sending.

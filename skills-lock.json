@@ -1,299 +1,299 @@
 {
-  "version": 1,
+  "version": 2,
   "skills": {
     "accessibility": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/accessibility/SKILL.md",
-      "computedHash": "ec778542464317266b3271c9484f343a84f839ce2ee4c9b2e488c6df2691b3a8"
+      "computedHash": "f137d803fce2b2f3a9d8b658d9e037accf0e94e419dcda9aa4804a4dc9775c87"
     },
     "agent-host-chat-contributions": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/agent-host-chat-contributions/SKILL.md",
-      "computedHash": "afccaf41827d7ae98292cd7b2fd9d6eca66a0e693525d2f26c5007e6c74198cd"
+      "computedHash": "e06b316eda33e6317d8e85fad5aeb7e2ba864125d0cc3047928698d4224c4631"
     },
     "agent-host-e2e-tests": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/agent-host-e2e-tests/SKILL.md",
-      "computedHash": "cbb3a1db85fcffe2e0c231b1a2f275c744a96b886bc5bfe77c818c5e12042260"
+      "computedHash": "7bc3fffd9e4c34485e631484ed0df0ee8264baca46a8d766c87ebad14a3674ff"
     },
     "agent-host-logs": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/agent-host-logs/SKILL.md",
-      "computedHash": "f1fb6490595315869d947e6b0b262a0b0620d291d9dd818fa065144df38f964e"
+      "computedHash": "41f9dbe896e6eb1379f518f0ca181e8e4d753347b1fd255b0b5923315280b0af"
     },
     "author-contributions": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/author-contributions/SKILL.md",
-      "computedHash": "6c7e684725cb1c1dc745b36adb2f14a171afdc1898ed35273017ed7cf84e90f8"
+      "computedHash": "21967f7161d6850002e50da0647e11934e7209ef8834fe27bebd3ae7f7a0d8de"
     },
     "auto-perf-optimize": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/auto-perf-optimize/SKILL.md",
-      "computedHash": "15320889ea97a87046eb3aab31e4d8afca580bcc702855ef9461f91a14d8a596"
+      "computedHash": "96de0e335bb4b41744af32e76c452f38e6002e20a263382cb3320f704ed08026"
     },
     "azure-pipelines": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/azure-pipelines/SKILL.md",
-      "computedHash": "6dc6c094badfd02055498ad2657c0b6984b387577d0752a30cafa383d881adb5"
+      "computedHash": "8b51d7e8b86de4fb4285d5e4eab7e2aa8663c3ef4f313ec49a79ef766e43b20c"
     },
     "build-champ-triage": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/build-champ-triage/SKILL.md",
-      "computedHash": "725b8a4cfe8400efcb198a2d7d2ca77095ef13c7626094d3856476f49110ee1e"
+      "computedHash": "d7c543c3806e98add0ce4f6fe105415c1ca15bf314c441bebd5af378ceb0151e"
     },
     "chat-customizations-editor": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/chat-customizations-editor/SKILL.md",
-      "computedHash": "e7112d29a95840d3430b545aa199b94a9a301906fe75c585112d3efcd8e1d537"
+      "computedHash": "f14937bd4c44f406232749d08834f024cd33cc12bea0faaabbf51969c3f88538"
     },
     "chat-perf": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/chat-perf/SKILL.md",
-      "computedHash": "3c21d6deb97b2c2c23eb24f458967aad0cd5acb57e0af695607a22ae6338ede8"
+      "computedHash": "8c0f13a9d8c82573ee7713bf4a378e6ba500b0ca88a0798a60ace11a1399dee6"
     },
     "chat-pet-sprite-creation": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/chat-pet-sprite-creation/SKILL.md",
-      "computedHash": "bb46284f7926670325c4b0d572ece294ed956314974f6e5f7afb09802af008f4"
+      "computedHash": "b15be1919759efc5f0068e76de0c4dd6992f5cd5551dc7295ab4d12ab3c5a69c"
     },
     "ci-artifact-testing": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/ci-artifact-testing/SKILL.md",
-      "computedHash": "559cfc956b87cbcf8a9f003bce935c26c209048d8f416c587b4cb2dcf30eb877"
+      "computedHash": "134934a758880c0e37e503406800b9c1c6ea45a56f872d53db4bc4d26e8ccc89"
     },
     "code-oss-logs": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/code-oss-logs/SKILL.md",
-      "computedHash": "282d7f33b5ce68dc7754320286e3ea522fd8dd3e6aedd424aa98b10d5d2bd8ae"
+      "computedHash": "d66b48f0948863806c6fa18ed09637fbe64420d6354ee98a02817939e4ca9498"
     },
     "code-review": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/code-review/SKILL.md",
-      "computedHash": "131b5f9ae13785bb30610b67ce50acaccb46ae88887c48fdc87fa65c5cd8ceb3"
+      "computedHash": "397eda312aa46c51ff2d9ef2917afe93069a4d9c1aef4f267c04625a394f31d5"
     },
     "codenotify": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/codenotify/SKILL.md",
-      "computedHash": "2957969a9c22414bc2efc9c5b3f4aea6de341117d713a0b7b9ce88888170f2d7"
+      "computedHash": "3a0e0deb3d53c1c9b7dd6de02c1240ebaf714969e37476bc751de1b5e845bc86"
     },
     "component": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/component/SKILL.md",
-      "computedHash": "ed3c4119383f3a627d15071c15ffbaeab148b83a49f48fc5c6efd436807da4b5"
+      "computedHash": "85bbb1fe7eb9eeebffd7506f7acedf1a75ab9fd2d487b9a75cb3f196bc9dbdc4"
     },
     "component-fixtures": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/component-fixtures/SKILL.md",
-      "computedHash": "704d6e635a8769eff2427e7ac071727a1dce153285500ccfaf8161e56d1d479c"
+      "computedHash": "d3c85e10cd15e07c19ab1ed09c95de27931f2a5e65d7b8ae8fb131131d58e343"
     },
     "cpu-profile-analysis": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/cpu-profile-analysis/SKILL.md",
-      "computedHash": "e6e04f97c449373ec75911b4624664fe9247307683d7411e24d51cd14434fded"
+      "computedHash": "a751e0f88437d1b8744101beebaa4fc67d8568a442f29deda9206703ca4d5a72"
     },
     "customizations-in-the-agent-host": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/customizations-in-the-agent-host/SKILL.md",
-      "computedHash": "e344a9c5db16964caa5bb52454887d414af71db3d83e36168cff1e6da4852fe8"
+      "computedHash": "e821e436e34fcaf0f9f6d7296d226c1237b720d8ca8779960d779fa95a99db12"
     },
     "design-philosophy": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/design-philosophy/SKILL.md",
-      "computedHash": "5137748f3476c2cd2d5b566d55a3207505da450b3ed64211634fc99a11a134c9"
+      "computedHash": "74c48d07f83cb08bb6f6daf9c1af67997ef73d4f1770313c7380c39467302a0b"
     },
     "doc-comments": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/doc-comments/SKILL.md",
-      "computedHash": "155b249cbf105211839a2b5a11b9d89b79955bd941de6c46fd8b31ffd5773bcc"
+      "computedHash": "3e801d5e0893d78cd646c12f10bb97e99169fd38b8540cb82f9e4c4bb3f65eee"
     },
     "experiments": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/experiments/SKILL.md",
-      "computedHash": "0ff2bc3c2c387fe72ce22acb27bcc5f8ab3b696b4304b7938ddff339eeeb8761"
+      "computedHash": "338f1a2d3ec29b576b205d86495b5e880aa97960cecb1a6e869b74a1b02b6b2a"
     },
     "feature-tryouts": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/feature-tryouts/SKILL.md",
-      "computedHash": "a15351f3d21158168c61a378ea9f8ac131834aca45244201521b899ad931b9e7"
+      "computedHash": "e25359af69f955938eadffb9f39a84614e1ef98f115222ced2abce0699c7c74c"
     },
     "feedback-learning": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/feedback-learning/SKILL.md",
-      "computedHash": "a875f6876b47741ab5587e4c703fe81ee42f8355be29ba5e196ea4891828c9d8"
+      "computedHash": "e3c8ae26b58b0021b0efb10d58369ef85494c833f76803910ba0143195a32a2a"
     },
     "fix-ci-failures": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/fix-ci-failures/SKILL.md",
-      "computedHash": "44758b549b51ebbc200d5f98f03213cd24aa9348a90ecbf89e74797938f3bfc8"
+      "computedHash": "55d5c2ec28ffd936d6db835abbcac1e634e5f506e2f200483000e8217fd69a50"
     },
     "fixissueno": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/fixissueno/SKILL.md",
-      "computedHash": "c9fc8379baaf3734d465500b54b1629563e84bd9d3712aeac1415ee115f81d8b"
+      "computedHash": "c7937ce3c87f5fc4c46faaed39ca41e5beda186d09b359cab55882aaec30520d"
     },
     "flaky-smoke-tests": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/flaky-smoke-tests/SKILL.md",
-      "computedHash": "10e8fa1a8e32ff02b4f7923b599f808e6f59044152c2264fae381971d77e3190"
+      "computedHash": "98f18190e80eabdf79ae192d80ea528b004694f4f080f00597ae7e4e44f2bd63"
     },
     "heap-snapshot-analysis": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/heap-snapshot-analysis/SKILL.md",
-      "computedHash": "09e562de1216faee1c3b10528179e3760207777a40e4083a9b463eed8c2a0044"
+      "computedHash": "81d9924284f54212cdf628b112264b0072e80393b983ac2274c9f73db27148d3"
     },
     "integrated-browser": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/integrated-browser/SKILL.md",
-      "computedHash": "f38222f751b49ae9f1dd4868cb8dbaa779535bfc84aec3700d610ff9376b7c56"
+      "computedHash": "c1a7bb2d66202735c9111bd8a05471baf6fbeaaecd47c92ecaf328e610b9f700"
     },
     "integration-tests": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/integration-tests/SKILL.md",
-      "computedHash": "db3467a1d4903634e8bcec8e5c82ea4edfeb3a26ca72de050e279a0aba3bd365"
+      "computedHash": "5d6a12d47352ab99ba1ddc41a4a90cbd70bfc505830e06c4ee76082fe9f778d5"
     },
     "issue-grouping": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/issue-grouping/SKILL.md",
-      "computedHash": "21616ee706021568ba379c355bcfb419a587d0cfaec5fa8e92f654f192d05eac"
+      "computedHash": "13d3edb245cc4eeac7969df43738cd8e5fdf30659d2ca2f6135bfe2c45f3a2b7"
     },
     "launch": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".agents/skills/launch/SKILL.md",
-      "computedHash": "458d4c740d39a8e5ceb6015e088b5db36464c975084cb75c758ae755c1f8e723"
+      "computedHash": "8673280bfb8699d8fc149fbba11640ee4b6d09e960b9aef1f458e0522fba13ed"
     },
     "memory-leak-audit": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/memory-leak-audit/SKILL.md",
-      "computedHash": "0da18ae5331eae3589d01ff1ae5db6dbd7c7bfadf4d07a2881961dfb81720fa9"
+      "computedHash": "d7fa88665de3c875195030521da02a2f4486acb7bf1419929e704119ef3c57ca"
     },
     "migrate-issues": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/migrate-issues/SKILL.md",
-      "computedHash": "4826d819b3153fac4ecc4164e57453d78f0393f3c442253051eba7a2262f0caf"
+      "computedHash": "26ba690f9c4e884ba2b16c6354f71bbfbf96340b3eb8ffca17a220e0d13eea44"
     },
     "otel": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/otel/SKILL.md",
-      "computedHash": "d41fa3f5a452981a21d33b2ed9d07f1b685845c9a8319b483f0d1dcbe74bdd24"
+      "computedHash": "620fe04b65685cf80a924a1c5828020909740983feca338a010f6c1d5f7b23e2"
     },
     "policy-and-managed-settings": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/policy-and-managed-settings/SKILL.md",
-      "computedHash": "251256cd2dcc4cf819e7912ac45e63b4a124f60275f107cd3df53f8d6c97723a"
+      "computedHash": "62d87a4a8351b4126f24c33fc079456d11399e3d7e1fffc8113e6dd2b03af6af"
     },
     "sessions": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/sessions/SKILL.md",
-      "computedHash": "314777fb5c43949ee752f2c00496a6cc5c839ea5c962254838dd5a2b40a8cb9f"
+      "computedHash": "0ce80a71b0d396d60cf3338a72cf698024445eec1cae41d655bb5de0727b2189"
     },
     "setup-environment": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/setup-environment/SKILL.md",
-      "computedHash": "c776703b7686c36920b297920cd18a4e570b3483853e350def53b7c86c4ad19f"
+      "computedHash": "d6bed6e380b36858a13bdc1b6ebc0a08998cd843ace8ee342bfaeb606d7590c4"
     },
     "smoke-tests": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/smoke-tests/SKILL.md",
-      "computedHash": "5cd98f77bfd4ca1dbb1a148d27f3550a3aa94c3eabda6f237ce2ce32d8559de1"
+      "computedHash": "ade4846e40b54e0b0f42ac532041b2b5a526d25a6842ac3adeafc92b6b8cb3c7"
     },
     "sweeper-implement": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/sweeper-implement/SKILL.md",
-      "computedHash": "4d4c2b489f322b4e611c915ad28ec67a812d4a517606f2b531f96c3a02f9df18"
+      "computedHash": "7bbf590e50d6b1fdd5b60ae700ebaba143d323276d57d3d3dcc46a15f36fe3ea"
     },
     "sweeper-plan": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/sweeper-plan/SKILL.md",
-      "computedHash": "ad2eb940b79e52ec8cb418eaebc1060914b7b5b3709e6988351df3aa7206a017"
+      "computedHash": "0ea6f0f42e620ed991212e4319a56215664810514329ddddb997a0de53783851"
     },
     "symbolicate-crash-dump": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/symbolicate-crash-dump/SKILL.md",
-      "computedHash": "24b4ad3dabf0ac65b4e2edc89e8f02f0196157c422801e4a894c7755e8d89bff"
+      "computedHash": "163931b82e6d2824062bd6f5807ee12a6c6f34b1209f1989c5a65557a8aad485"
     },
     "unit-tests": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/unit-tests/SKILL.md",
-      "computedHash": "8cfe233ab8d37e850510cb8d753307f25866a8ebe53c1cf5c1bd5649b1444a70"
+      "computedHash": "c71d896488238081d665ce76fb123881b9e3e7d199fc825516ac13a6600be94d"
     },
     "update-instructions": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/update-instructions/SKILL.md",
-      "computedHash": "06b784837282cdc77f1dda3b407d17cb9013d0de8dd68703e8c90baaab222eb9"
+      "computedHash": "c642df8ef2dd0b88c0f8e0c710987a8f914cd44f4c04c1a347b1acccabdfeb50"
     },
     "update-screenshots": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/update-screenshots/SKILL.md",
-      "computedHash": "e16648b5a2e571c97970ff3051ba1febe0c23897afd3be5648159caf891d97cd"
+      "computedHash": "0dc714087c3d5fc3b69182e6e406c371303f7d3773e0dcae4685d70f3b60e19a"
     },
     "ux-css-layout": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/ux-css-layout/SKILL.md",
-      "computedHash": "fe96e0c0e6d01b011ff7f62254b9eefcdb3d433f29001a3056386c36b8d1c41c"
+      "computedHash": "85fb523600226d55a1251636efde1128a692f0c2eba7dc1aeff87aabc111142e"
     },
     "ux-theming": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/ux-theming/SKILL.md",
-      "computedHash": "4dc7af61d95de0045e06d68fee3ae29d9f5dd86c7d4899869e27a7c1c52774f0"
+      "computedHash": "8cf522893773792fef62b5ee4c9adfc3abfc7089f06ec76a5049e0bac1220d0b"
     },
     "validate-ui-scenario": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/validate-ui-scenario/SKILL.md",
-      "computedHash": "cc78f771cfff8ee8c3572e49710206ed9a78020c4f3b8321b3910e623402deef"
+      "computedHash": "e15ca2c79a9578fb9900a25ac0eb3d4d3d328fcce494348334b96cc69865529a"
     },
     "vscode-dev-workbench": {
       "source": "microsoft/vscode",
       "sourceType": "github",
       "skillPath": ".github/skills/vscode-dev-workbench/SKILL.md",
-      "computedHash": "84ec28b5bf79673d1bb2406a86767f46d7a8babc95cb4219b9f5e0e993422bf4"
+      "computedHash": "3c30c3abcc19b7954ce2e0cac312d74152e2021bf021d2d36f55c714f19f164b"
     }
   }
 }

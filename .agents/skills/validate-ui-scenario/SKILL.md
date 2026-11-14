@@ -14,28 +14,28 @@ A scenario is a small JavaScript file run by `test/scenario/out/runScenario.js`.
 ## Prepare
 
 ```bash
-npm install                             # once
-npm --prefix test/scenario run compile  # after any change under test/scenario
+pnpm install                             # once
+pnpm -C test/scenario run compile  # after any change under test/scenario
 ```
 
 **Check `ffmpeg` and `ffprobe` are available before running.** The runner looks on `PATH` and in the usual install locations, so an ffmpeg installed after the editor started is still found. Without them the scenario still runs and keeps the raw recording, but the video is not captioned with step titles. The runner warns at startup; if they are missing, tell the user how to install them rather than silently returning an unannotated video:
 
-| Platform | Install                      |
-| -------- | ---------------------------- |
-| Windows  | `winget install Gyan.FFmpeg` |
-| macOS    | `brew install ffmpeg`        |
-| Linux    | `sudo apt install ffmpeg`    |
+| Platform | Install |
+|----------|---------|
+| Windows | `winget install Gyan.FFmpeg` |
+| macOS | `brew install ffmpeg` |
+| Linux | `sudo apt install ffmpeg` |
 
 A new terminal may be needed for `PATH` to pick them up, or set `FFMPEG_PATH` and `FFPROBE_PATH`. An existing run can be annotated afterwards with `node test/scenario/out/renderEvidenceChapters.js <run-dir>`.
 
-| Target                          | Flags                  | Also required                                   | Use for                                       |
-| ------------------------------- | ---------------------- | ----------------------------------------------- | --------------------------------------------- |
-| Installed Insiders, else Stable | _(none — the default)_ | nothing                                         | Reproducing a report against shipped behavior |
-| Dev build from this checkout    | `--dev`                | Matching Electron runtime, `npm run build-fast` | Verifying an unmerged change                  |
-| A specific install              | `--build <app-root>`   | nothing                                         | Pinning an exact build                        |
-| Web                             | `--web --headless`     | `npm run build-fast -- --client-only`           | Browser-only behavior                         |
+| Target | Flags | Also required | Use for |
+|--------|-------|---------------|---------|
+| Installed Insiders, else Stable | *(none — the default)* | nothing | Reproducing a report against shipped behavior |
+| Dev build from this checkout | `--dev` | Matching Electron runtime, `pnpm run build-fast` | Verifying an unmerged change |
+| A specific install | `--build <app-root>` | nothing | Pinning an exact build |
+| Web | `--web --headless` | `pnpm run build-fast --client-only` | Browser-only behavior |
 
-Reuse the matching Electron runtime when present; run `npm run electron` only when it is missing or incompatible. Fast builds refresh outputs without type checking; validate types separately when warranted.
+Reuse the matching Electron runtime when present; run `pnpm run electron` only when it is missing or incompatible. Fast builds refresh outputs without type checking; validate types separately when warranted.
 
 With no target flag the runner finds an installed VS Code Insiders (falling back to Stable) and logs which one it chose. `--build` takes the application root — the install directory on Windows and Linux, or the `.app` bundle on macOS:
 
@@ -53,11 +53,11 @@ Every target runs with its own profile and extensions directory, so your extensi
 Save the file next to the run it produces, for example `.build/vscode-playwright-mcp/<issue>.cjs`. The **`.cjs`** extension matters: this package is an ES module package, so a CommonJS scenario named `.js` fails to load. An ES module scenario with a default export works too.
 
 ```js
-const os = require("os");
-const path = require("path");
-const fs = require("fs");
+const os = require('os');
+const path = require('path');
+const fs = require('fs');
 
-const workspacePath = path.join(os.tmpdir(), "issue-250159-workspace");
+const workspacePath = path.join(os.tmpdir(), 'issue-250159-workspace');
 fs.mkdirSync(workspacePath, { recursive: true });
 
 // The settings tree is virtualized, so only the rows near the viewport exist in
@@ -80,52 +80,45 @@ const COLLECT_TITLES = `(async () => {
 })()`;
 
 module.exports = {
-  id: "vscode-250159-settings-search",
-  title: "Settings search matches across title and description",
-  source: "https://github.com/microsoft/vscode/issues/250159",
-  workspacePath,
-  steps: [
-    {
-      id: "SS-01",
-      title: "Open the Settings editor",
-      async run(context) {
-        await context.workbench.quickaccess.runCommand(
-          "workbench.action.openSettings2",
-        );
-        await context.page.waitForSelector(".settings-editor", {
-          state: "visible",
-          timeout: 20000,
-        });
-        return "The Settings editor is visible.";
-      },
-    },
-    {
-      id: "SS-02",
-      title: "Search across title and description",
-      async run(context) {
-        await context.workbench.settingsEditor.searchSettingsUI("chat confirm");
-        const titles = await context.page.evaluate(COLLECT_TITLES);
-        if (!titles.some((title) => /max\s*requests/iu.test(title))) {
-          throw new Error(
-            `Max Requests is absent. Found: ${titles.join(", ")}`,
-          );
-        }
-        return "Max Requests is present in the results.";
-      },
-    },
-  ],
+	id: 'vscode-250159-settings-search',
+	title: 'Settings search matches across title and description',
+	source: 'https://github.com/microsoft/vscode/issues/250159',
+	workspacePath,
+	steps: [
+		{
+			id: 'SS-01',
+			title: 'Open the Settings editor',
+			async run(context) {
+				await context.workbench.quickaccess.runCommand('workbench.action.openSettings2');
+				await context.page.waitForSelector('.settings-editor', { state: 'visible', timeout: 20000 });
+				return 'The Settings editor is visible.';
+			}
+		},
+		{
+			id: 'SS-02',
+			title: 'Search across title and description',
+			async run(context) {
+				await context.workbench.settingsEditor.searchSettingsUI('chat confirm');
+				const titles = await context.page.evaluate(COLLECT_TITLES);
+				if (!titles.some(title => /max\s*requests/iu.test(title))) {
+					throw new Error(`Max Requests is absent. Found: ${titles.join(', ')}`);
+				}
+				return 'Max Requests is present in the results.';
+			}
+		}
+	]
 };
 ```
 
-| Field           | Meaning                                                                                                                                                                   |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`, `title`   | Identify the run; `id` names the evidence directory                                                                                                                       |
-| `source`        | Issue or test-plan item the scenario came from                                                                                                                            |
-| `workspacePath` | Disposable folder to open                                                                                                                                                 |
-| `userSettings`  | Settings seeded into the profile before launch, including the built-in Agents profile when using `--agents`                                                               |
-| `extraArgs`     | Extra VS Code command-line arguments                                                                                                                                      |
-| `extraEnv`      | Environment overrides for the launched app; `undefined` unsets a variable. Keep the automation runner's HOME unchanged and isolate application discovery with this field. |
-| `stepPauseMs`   | How long to hold each finished step so its caption is readable. Defaults to `1000`; set `0` when the scenario is timing-sensitive                                         |
+| Field | Meaning |
+|-------|---------|
+| `id`, `title` | Identify the run; `id` names the evidence directory |
+| `source` | Issue or test-plan item the scenario came from |
+| `workspacePath` | Disposable folder to open |
+| `userSettings` | Settings seeded into the profile before launch, including the built-in Agents profile when using `--agents` |
+| `extraArgs` | Extra VS Code command-line arguments |
+| `extraEnv` | Environment overrides for the launched app; `undefined` unsets a variable. Keep the automation runner's HOME unchanged and isolate application discovery with this field. |
+| `stepPauseMs` | How long to hold each finished step so its caption is readable. Defaults to `1000`; set `0` when the scenario is timing-sensitive |
 
 Each step receives a `context` with `app`, `workbench`, `code`, `page`, and `skip(reason, options)`. `workbench` exposes the feature helpers (`settingsEditor`, `quickaccess`, `editors`, `terminal`, `chat`, …); `page` is the Playwright page for anything they do not cover.
 
@@ -139,18 +132,14 @@ Use `context.code.driver.resizeWindow({ width, height })` for responsive-layout 
 
 Decide this while planning, before writing the scenario, and classify each one — the two kinds have different consequences:
 
-| `needs`          | Meaning                                                                                            | What to do                                                                   |
-| ---------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `human`          | A person is required: physical hardware, a subjective judgement, a sign-in that cannot be scripted | Report the step so someone can check it by hand                              |
-| `infrastructure` | Automatable in principle, but the harness cannot do it yet                                         | Report it as an **enhancement to this skill**, naming the missing capability |
+| `needs` | Meaning | What to do |
+|---------|---------|------------|
+| `human` | A person is required: physical hardware, a subjective judgement, a sign-in that cannot be scripted | Report the step so someone can check it by hand |
+| `infrastructure` | Automatable in principle, but the harness cannot do it yet | Report it as an **enhancement to this skill**, naming the missing capability |
 
 ```js
-ctx.skip("Comparing physical print output requires a person with a printer.", {
-  needs: "human",
-});
-ctx.skip("The harness cannot drive native OS file dialogs.", {
-  needs: "infrastructure",
-});
+ctx.skip('Comparing physical print output requires a person with a printer.', { needs: 'human' });
+ctx.skip('The harness cannot drive native OS file dialogs.', { needs: 'infrastructure' });
 ```
 
 Blocked steps are recorded in `manifest.json`, highlighted in a **Needs attention** section of `report.html`, marked on the video caption (`SKIPPED - NEEDS HUMAN`), and printed at the end of the run. Surface them in your summary — never quietly drop a step you could not perform, and never weaken an assertion so that it passes.
@@ -165,14 +154,14 @@ Exit code `0` means every step passed, `1` means the run failed or was aborted, 
 
 Evidence is written to `.build/vscode-playwright-mcp/evidence/<run-id>/`:
 
-| File                   | Contents                                                                  |
-| ---------------------- | ------------------------------------------------------------------------- |
-| `report.html`          | Step table, outcome, embedded video                                       |
-| `manifest.json`        | Step timestamps, statuses, artifact paths, environment                    |
+| File | Contents |
+|------|----------|
+| `report.html` | Step table, outcome, embedded video |
+| `manifest.json` | Step timestamps, statuses, artifact paths, environment |
 | `videos/annotated.mp4` | Recording with a caption band showing each step and its validation result |
-| `videos/*.webm`        | The raw recording                                                         |
-| `*.png`                | Per-step screenshots                                                      |
-| `logs/`                | Playwright trace, window and server logs                                  |
+| `videos/*.webm` | The raw recording |
+| `*.png` | Per-step screenshots |
+| `logs/` | Playwright trace, window and server logs |
 
 The caption band is added **above** the recorded frame rather than drawn over it, so no recorded pixel is hidden and the recording keeps its original length. Each caption carries the step number and id, its status, the step title, and the validation detail the step reported. Re-render after editing a manifest with `node test/scenario/out/renderEvidenceChapters.js <run-dir>`.
 
@@ -196,7 +185,7 @@ Always call out, separately from the pass/fail result:
 
 ## Related
 
-- **Interactive exploration.** `test/mcp` also serves these tools over MCP (`vscode_automation_*`), which helps when you need to inspect the UI before knowing what to assert. Configure it as an MCP server with `cwd` `test/mcp` and command `npm run start-stdio`.
+- **Interactive exploration.** Use the `launch` skill to drive a development window with Playwright when you need to inspect the UI before knowing what to assert.
 - **Automated validation on a pull request.** `microsoft/vscode-engineering` runs the same harness in CI: labelling a pull request `~requires-ui-validation` researches the change, runs a scenario against the exact merge candidate, and posts the per-step result with captioned video. Use this skill when a scenario is not yet covered there, or to iterate locally before proposing one.
 
 <example>

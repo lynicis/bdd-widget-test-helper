@@ -8,7 +8,6 @@ description: Primary accessibility skill for VS Code. REQUIRED for new feature a
 Use this skill for any VS Code feature work that introduces or changes interactive UI. Use this skill by default for new features and contributions, including when the request does not explicitly mention accessibility.
 
 Trigger examples:
-
 - "add a new feature"
 - "implement a new panel/view/widget"
 - "add a new command or workflow"
@@ -61,39 +60,29 @@ An accessibility help dialog tells the user what the feature does, which keyboar
 The simplest approach is to return an `AccessibleContentProvider` directly from `getProvider()`. This is the most common pattern in the codebase (used by chat, inline chat, quick chat, etc.):
 
 ```ts
-import {
-  AccessibleViewType,
-  AccessibleContentProvider,
-  AccessibleViewProviderId,
-} from "../../../../platform/accessibility/browser/accessibleView.js";
-import { IAccessibleViewImplementation } from "../../../../platform/accessibility/browser/accessibleViewRegistry.js";
-import { AccessibilityVerbositySettingId } from "../../../../platform/accessibility/common/accessibilityConfiguration.js";
+import { AccessibleViewType, AccessibleContentProvider, AccessibleViewProviderId } from '../../../../platform/accessibility/browser/accessibleView.js';
+import { IAccessibleViewImplementation } from '../../../../platform/accessibility/browser/accessibleViewRegistry.js';
+import { AccessibilityVerbositySettingId } from '../../../../platform/accessibility/common/accessibilityConfiguration.js';
 
 export class MyFeatureAccessibilityHelp implements IAccessibleViewImplementation {
-  readonly priority = 100;
-  readonly name = "my-feature";
-  readonly type = AccessibleViewType.Help;
-  readonly when = MyFeatureContextKeys.isFocused;
+	readonly priority = 100;
+	readonly name = 'my-feature';
+	readonly type = AccessibleViewType.Help;
+	readonly when = MyFeatureContextKeys.isFocused;
 
-  getProvider(accessor: ServicesAccessor) {
-    const helpText = [
-      localize("myFeature.help.overview", "You are in My Feature. …"),
-      localize(
-        "myFeature.help.key1",
-        "- {0}: Do something",
-        "<keybinding:myFeature.doSomething>",
-      ),
-    ].join("\n");
-    return new AccessibleContentProvider(
-      AccessibleViewProviderId.MyFeature,
-      { type: AccessibleViewType.Help },
-      () => helpText,
-      () => {
-        /* onClose — refocus whatever was focused before */
-      },
-      AccessibilityVerbositySettingId.MyFeature,
-    );
-  }
+	getProvider(accessor: ServicesAccessor) {
+		const helpText = [
+			localize('myFeature.help.overview', "You are in My Feature. …"),
+			localize('myFeature.help.key1', "- {0}: Do something", '<keybinding:myFeature.doSomething>'),
+		].join('\n');
+		return new AccessibleContentProvider(
+			AccessibleViewProviderId.MyFeature,
+			{ type: AccessibleViewType.Help },
+			() => helpText,
+			() => { /* onClose — refocus whatever was focused before */ },
+			AccessibilityVerbositySettingId.MyFeature,
+		);
+	}
 }
 ```
 
@@ -141,27 +130,25 @@ If the feature is purely keyboard-driven with native text input/output (e.g., a 
 
 ```ts
 export class MyFeatureAccessibleView implements IAccessibleViewImplementation {
-  readonly priority = 100;
-  readonly name = "my-feature";
-  readonly type = AccessibleViewType.View;
-  readonly when = MyFeatureContextKeys.isFocused;
+	readonly priority = 100;
+	readonly name = 'my-feature';
+	readonly type = AccessibleViewType.View;
+	readonly when = MyFeatureContextKeys.isFocused;
 
-  getProvider(accessor: ServicesAccessor) {
-    // Retrieve services, build content from the feature's current state
-    const content = getMyFeatureContent();
-    if (!content) {
-      return undefined;
-    }
-    return new AccessibleContentProvider(
-      AccessibleViewProviderId.MyFeature,
-      { type: AccessibleViewType.View },
-      () => content,
-      () => {
-        /* onClose — refocus whatever was focused before the accessible view opened */
-      },
-      AccessibilityVerbositySettingId.MyFeature,
-    );
-  }
+	getProvider(accessor: ServicesAccessor) {
+		// Retrieve services, build content from the feature's current state
+		const content = getMyFeatureContent();
+		if (!content) {
+			return undefined;
+		}
+		return new AccessibleContentProvider(
+			AccessibleViewProviderId.MyFeature,
+			{ type: AccessibleViewType.View },
+			() => content,
+			() => { /* onClose — refocus whatever was focused before the accessible view opened */ },
+			AccessibilityVerbositySettingId.MyFeature,
+		);
+	}
 }
 ```
 
@@ -174,16 +161,14 @@ A verbosity setting controls whether a hint such as "press Alt+F1 for accessibil
 ### Steps
 
 1. **Add an entry** to `AccessibilityVerbositySettingId` in `src/vs/workbench/contrib/accessibility/browser/accessibilityConfiguration.ts`:
-
    ```ts
    export const enum AccessibilityVerbositySettingId {
-     // … existing entries …
-     MyFeature = "accessibility.verbosity.myFeature",
+       // … existing entries …
+       MyFeature = 'accessibility.verbosity.myFeature'
    }
    ```
 
 2. **Register the configuration property** in the same file's `configuration.properties` object:
-
    ```ts
    [AccessibilityVerbositySettingId.MyFeature]: {
        description: localize('verbosity.myFeature.description',
@@ -191,7 +176,6 @@ A verbosity setting controls whether a hint such as "press Alt+F1 for accessibil
        ...baseVerbosityProperty
    },
    ```
-
    The `baseVerbosityProperty` gives it `type: 'boolean'`, `default: true`, and `tags: ['accessibility']`.
 
 3. **Reference the setting key** in both the help-dialog provider (`verbositySettingKey`) and the accessible-view provider so the runtime can check whether to show the hint.
@@ -210,7 +194,6 @@ Accessibility signals provide audible and spoken feedback for events that happen
 ### How signals work
 
 Each signal has two modalities controlled by user settings:
-
 - **Sound** — a short audio cue, configurable to `auto` (on when screen reader attached), `on`, or `off`.
 - **Announcement** — a spoken message via `aria-live`, configurable to `auto` or `off`.
 
@@ -236,13 +219,11 @@ this._accessibilitySignalService.playSignal(AccessibilitySignal.error, { userGes
 Use the `alert()` and `status()` functions from `src/vs/base/browser/ui/aria/aria.ts` to announce dynamic changes to screen readers.
 
 ### `alert(msg)` — Assertive live region (`role="alert"`)
-
 - **Use for**: Urgent, important information that the user must know immediately.
 - **Examples**: Errors, warnings, critical state changes, results of a user-initiated action.
 - **Behavior**: Interrupts the screen reader's current speech.
 
 ### `status(msg)` — Polite live region (`aria-live="polite"`)
-
 - **Use for**: Non-urgent, informational updates that should be spoken when the screen reader is idle.
 - **Examples**: Progress updates, search result counts, background state changes.
 - **Behavior**: Queued and spoken after the screen reader finishes its current output.
@@ -268,6 +249,24 @@ Every interactive UI element must be fully operable via the keyboard.
 - **No mouse-only interactions**: Every action reachable by click or hover must also be reachable via keyboard (context menus, buttons, toggles, etc.).
 - **Escape to dismiss**: Overlays, dialogs, and popups must be dismissable with `Escape`, returning focus to the previous element.
 - **Focus trapping**: Modal dialogs must trap focus within the dialog until dismissed.
+
+### Visible Focus and State Precedence
+
+- Keyboard focus must remain visible when hover, selection, open state, or a nested control is also active. Test the combined state, not just focus and hover separately.
+- Focus the real production target. A synthetic class on a non-focusable wrapper can hide lifecycle bugs and does not prove that `:focus-visible`, focus restoration, or screen-reader navigation works.
+- Identify which element paints the focus ring. Lists and trees may suppress the outer row and draw on an inner `.monaco-tl-row`; do not clear that inner outline unless another visible solid ring remains.
+- Pointer modality begins only when the pointer resolves to an actionable target. Moving through menu padding, blank list space, or a filter input must not convert a keyboard-focused row into pointer-hover styling.
+- A component with nested actions must expose one active boundary. When focus moves to an inline action, suppress the parent card/row hover boundary while retaining the action's solid focus ring.
+- Keep persistent state distinct from focus: `aria-expanded="true"` and `aria-pressed="true"` communicate open/pressed state, while `:focus-visible` communicates keyboard location. Both use solid boundaries in HC, but keyboard focus remains the higher-priority owner when combined.
+- Native `<details>/<summary>` already exposes disclosure semantics to assistive technology, but `<summary>` does not receive an `aria-expanded` attribute. Use the native `open` state for visual styling rather than adding redundant ARIA.
+
+For deterministic component fixtures, focus the actual element through the fixture focus API and render any focus-triggered tooltip/hover through the production hover service. Do not replace the service with a no-op merely to simplify a screenshot; the omitted content may be part of the keyboard experience.
+
+### Explaining unavailable options
+
+Follow the [discoverable unavailable-feature pattern](../design-philosophy/SKILL.md#make-unavailable-features-understandable): a feature promoted in documentation should not become inexplicably absent solely because the user cannot enable it. Announce both the disabled state and its reason using the control's supported ARIA semantics; a grey label, briefcase icon, or hover alone is insufficient. Keep icons decorative when text already conveys their meaning.
+
+Explanatory links must remain independently mouse- and keyboard-operable without activating the disabled option. Verify actual Tab/Shift+Tab and Enter behavior, not just `tabIndex` or a programmatic `focus()`; list navigation may skip disabled rows. Preserve focus/selection on policy refresh, guard stale actions, and update the feature's accessibility help with the available explanation and next step. Reuse the settings, model, harness, and permission-picker examples linked in the design guidance.
 
 ---
 

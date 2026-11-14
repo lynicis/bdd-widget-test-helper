@@ -13,9 +13,9 @@ Turn a native VS Code crash dump (`.dmp`) into a readable backtrace with method 
 
 - A crash dump file (`*.dmp`). See [Creating a crash report](#creating-a-crash-report) below if you don't have one yet.
 - A global install of `electron-minidump`:
-  ```bash
-  npm install -g electron-minidump
-  ```
+    ```bash
+    npm install -g electron-minidump
+    ```
 - For Insiders/Stable symbols, an authenticated GitHub CLI (`gh auth status`) with access to the private `microsoft/vscode-electron-prebuilt` repo.
 
 ## Procedure
@@ -31,7 +31,6 @@ electron-minidump crash-file.dmp > symbolicated-output.log
 Inspect `symbolicated-output.log`. Look at the top frames of the backtrace: if a frame names a module (e.g. `Electron Framework`) but has **no method name after it**, symbols for that module are required.
 
 > **Retry on transient download errors.** electron-minidump downloads symbols from public symbol servers, so a run can fail on a transient network error (e.g. `failed to download ... (code 56)` or `(code 28)`). Successfully downloaded symbols are cached, so simply re-running the same command resumes where it left off. Retrying a few times is expected:
->
 > ```bash
 > for i in 1 2 3 4 5; do
 >     electron-minidump crash-file.dmp > symbolicated-output.log && break
@@ -43,10 +42,10 @@ Inspect `symbolicated-output.log`. Look at the top frames of the backtrace: if a
 
 Match the symbol source to the build that produced the crash:
 
-| Build that crashed                    | Symbol files source                                                                                           |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Build that crashed | Symbol files source |
+|--------------------|---------------------|
 | Insiders / Stable (internal Electron) | [microsoft/vscode-electron-prebuilt releases](https://github.com/microsoft/vscode-electron-prebuilt/releases) |
-| Code - OSS (OSS Electron)             | [electron/electron releases](https://github.com/electron/electron/releases)                                   |
+| Code - OSS (OSS Electron) | [electron/electron releases](https://github.com/electron/electron/releases) |
 
 `microsoft/vscode-electron-prebuilt` is a **private** repo — this is why the flow is team-members-only. A plain browser or `curl` link will 404 without auth; download the asset with an authenticated GitHub CLI instead (`gh auth status` should show you logged in):
 
@@ -60,7 +59,7 @@ gh release download v42.5.0-14525058 \
     --pattern "stable-symbols-v42.5.0-win32-x64.zip"
 ```
 
-The releases are tagged by **Electron version**, not VS Code version, so first find the Electron version the crashed VS Code build shipped. It's the `target=` in that version's `.npmrc` (e.g. `git show 1.128.0:.npmrc`), which mirrors the `electron` devDependency in `package.json`. Then pick the matching symbol zip by **quality, platform, and architecture** — e.g. a Stable Windows x64 crash on Electron 42.5.0 needs `stable-symbols-v42.5.0-win32-x64.zip` (use `insiders-symbols-…` for Insiders). Code - OSS symbols come from the public [electron/electron releases](https://github.com/electron/electron/releases) and can be downloaded without special access.
+The releases are tagged by **Electron version**, not VS Code version, so first find the Electron version the crashed VS Code build shipped. It's the `nativeBuild.target` field of that version's `package.json` (e.g. `git show <version>:package.json | node -p "JSON.parse(require('fs').readFileSync(0, 'utf8')).nativeBuild.target"`). Versions released before that field existed have it as the `target=` in `.npmrc` (e.g. `git show 1.128.0:.npmrc`). Then pick the matching symbol zip by **quality, platform, and architecture** — e.g. a Stable Windows x64 crash on Electron 42.5.0 needs `stable-symbols-v42.5.0-win32-x64.zip` (use `insiders-symbols-…` for Insiders). Code - OSS symbols come from the public [electron/electron releases](https://github.com/electron/electron/releases) and can be downloaded without special access.
 
 > **These zips are small and selective.** A `*-symbols-*.zip` typically contains only a handful of first-party modules — `electron.exe.sym`, `libEGL.dll.sym`, `libGLESv2.dll.sym` on Windows (and the equivalents elsewhere). Many modules that show up in a backtrace — notably `runtime.node` and any OS/third-party DLL — are **not** in these zips. `runtime.node` frames often cannot be symbolicated at all from public symbols; when the crash is in a third-party module, attribute it by module name rather than expecting method names on every frame (see [Reading the result](#reading-the-result)).
 
@@ -132,12 +131,12 @@ The process type tells you whether this is the main process, a renderer/window, 
 strings -a crash-file.dmp | grep -oiE "utility-sub-type=[a-zA-Z0-9._-]+|node\.mojom\.[A-Za-z]+|--type=[a-z-]+" | sort -u
 ```
 
-| Marker                                                               | Process                               |
-| -------------------------------------------------------------------- | ------------------------------------- |
+| Marker | Process |
+|--------|---------|
 | `node.mojom.NodeService` / `utility-sub-type=node.mojom.NodeService` | Extension host (Node utility process) |
-| `--type=renderer`                                                    | A workbench window (renderer)         |
-| `--type=gpu-process`                                                 | GPU process                           |
-| (no `--type`)                                                        | Main process                          |
+| `--type=renderer` | A workbench window (renderer) |
+| `--type=gpu-process` | GPU process |
+| (no `--type`) | Main process |
 
 Match this against the reported symptom (e.g. an "extension host crash-loop" should correspond to a `NodeService` utility crash).
 
@@ -161,17 +160,17 @@ Native crashes in a remote server's extension host use core dumps and `gdb` inst
 1. Before running the server, allow core dumps: `ulimit -c unlimited`.
 2. Reproduce the crash. Retrieve the core dump via `coredumpctl`, or from the path in `/proc/sys/kernel/core_pattern`.
 3. Load it in gdb and capture output:
-   ```bash
-   gdb -se <path-to-vscode-server>/node -c <path-to-core-file>
-   ```
+    ```bash
+    gdb -se <path-to-vscode-server>/node -c <path-to-core-file>
+    ```
    Then run and collect the output of:
-   ```
-   set pagination off
-   info sharedlibrary
-   info registers
-   bt full
-   disassemble
-   ```
+    ```
+    set pagination off
+    info sharedlibrary
+    info registers
+    bt full
+    disassemble
+    ```
 
 ## Tips
 
