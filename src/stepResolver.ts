@@ -2,7 +2,7 @@
  * Resolves a step line to its target: the built-in step set, an existing
  * step file (indexed), an external step, or a not-yet-created file.
  */
-import { parseFeature, withDataTables } from "./featureParser";
+import { parseSteps } from "./featureParser";
 import { getStepFilename, predefinedSteps, stepIdentifier } from "./naming";
 import { StepIndex, StepIndexEntry } from "./stepIndex";
 
@@ -27,14 +27,15 @@ export function resolveStep(
     return { kind: "builtin", identifier };
   }
 
-  index.ensureIndexed(featurePath);
+  const options = index.optionsFor(featurePath);
+  index.ensureIndexed(featurePath, options);
   const existing = index.lookup(fileStem, featurePath);
   if (existing) return { kind: "existing", entry: existing, identifier };
 
-  const external = index.findExternalStep(fileStem, featurePath);
+  const external = index.findExternalStep(fileStem, featurePath, options);
   if (external) return { kind: "external", entry: external, identifier };
 
-  const { folder } = index.targetPathForNewStep(featurePath);
+  const { folder } = index.targetPathForNewStep(featurePath, options);
   return { kind: "missing", folder, fileStem, identifier };
 }
 
@@ -70,7 +71,7 @@ export function unresolvedSteps(
   featurePath: string,
   index: StepIndex,
 ): StepDiagnostic[] {
-  const steps = withDataTables(parseFeature(text).steps, text);
+  const steps = parseSteps(text);
   const diagnostics: StepDiagnostic[] = [];
   for (const step of steps) {
     const resolution = resolveStep(step.text, featurePath, index);

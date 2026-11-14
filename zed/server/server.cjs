@@ -24,6 +24,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 
 // zed/server/src/lsp.ts
+var fs3 = __toESM(require("fs"));
 var path3 = __toESM(require("path"));
 var import_url2 = require("url");
 
@@ -1681,6 +1682,9 @@ function matchStep(line, lineIndex, keywords, previousEffective) {
     // filled in by withDataTables
   };
 }
+function parseSteps(contents) {
+  return withDataTables(parseFeature(contents).steps, contents);
+}
 function withDataTables(steps, contents) {
   const lines = contents.split(/\r?\n/);
   return steps.map((s) => {
@@ -2771,15 +2775,15 @@ var StepIndex = class {
     }
     return best;
   }
+  /** Resolves the effective bdd options for a feature file (fresh per call). */
+  optionsFor(featurePath) {
+    return findOptions(featurePath, this.workspaceRoot, this.getDefaults);
+  }
   /** Indexes the step folder(s) for a feature file, if not done yet. */
-  ensureIndexed(featurePath) {
-    const options = findOptions(
-      featurePath,
-      this.workspaceRoot,
-      this.getDefaults
-    );
-    const baseDir = stepFolderBaseDir(featurePath, options, this.workspaceRoot);
-    const stepFolder = path2.resolve(baseDir, options.stepFolderName);
+  ensureIndexed(featurePath, options) {
+    const opts = options ?? this.optionsFor(featurePath);
+    const baseDir = stepFolderBaseDir(featurePath, opts, this.workspaceRoot);
+    const stepFolder = path2.resolve(baseDir, opts.stepFolderName);
     const rootKey = stepFolder;
     if (this.indexedRoots.has(rootKey)) return;
     this.indexFolder(stepFolder);
@@ -2804,24 +2808,19 @@ var StepIndex = class {
     this.fire();
   }
   /** Resolves where a NEW step file for a feature would be created. */
-  targetPathForNewStep(featurePath) {
-    const options = findOptions(
-      featurePath,
-      this.workspaceRoot,
-      this.getDefaults
-    );
-    const baseDir = stepFolderBaseDir(featurePath, options, this.workspaceRoot);
-    return { folder: path2.resolve(baseDir, options.stepFolderName), options };
+  targetPathForNewStep(featurePath, options) {
+    const opts = options ?? this.optionsFor(featurePath);
+    const baseDir = stepFolderBaseDir(featurePath, opts, this.workspaceRoot);
+    return {
+      folder: path2.resolve(baseDir, opts.stepFolderName),
+      options: opts
+    };
   }
   /** An external step (package: uri) that matches the file name, if any. */
-  findExternalStep(fileStem, featurePath) {
-    const options = findOptions(
-      featurePath,
-      this.workspaceRoot,
-      this.getDefaults
-    );
+  findExternalStep(fileStem, featurePath, options) {
+    const opts = options ?? this.optionsFor(featurePath);
     const file = `${fileStem}.dart`;
-    const external = options.externalSteps.find(
+    const external = opts.externalSteps.find(
       (l) => l.endsWith(file) || l.includes(`/${file}`)
     );
     if (!external) return void 0;
@@ -2922,12 +2921,13 @@ function resolveStep(stepText, featurePath, index2) {
   if (predefinedSteps.has(identifier)) {
     return { kind: "builtin", identifier };
   }
-  index2.ensureIndexed(featurePath);
+  const options = index2.optionsFor(featurePath);
+  index2.ensureIndexed(featurePath, options);
   const existing = index2.lookup(fileStem, featurePath);
   if (existing) return { kind: "existing", entry: existing, identifier };
-  const external = index2.findExternalStep(fileStem, featurePath);
+  const external = index2.findExternalStep(fileStem, featurePath, options);
   if (external) return { kind: "external", entry: external, identifier };
-  const { folder } = index2.targetPathForNewStep(featurePath);
+  const { folder } = index2.targetPathForNewStep(featurePath, options);
   return { kind: "missing", folder, fileStem, identifier };
 }
 function stepDefinitionLocation(resolution) {
@@ -2940,7 +2940,7 @@ function stepDefinitionLocation(resolution) {
   return void 0;
 }
 function unresolvedSteps(text, featurePath, index2) {
-  const steps = withDataTables(parseFeature(text).steps, text);
+  const steps = parseSteps(text);
   const diagnostics = [];
   for (const step of steps) {
     const resolution = resolveStep(step.text, featurePath, index2);
@@ -3089,8 +3089,7 @@ function publishDiagnostics(uri) {
   });
 }
 function stepsOf(uri) {
-  const text = documents.get(uri) ?? "";
-  return withDataTables(parseFeature(text).steps, text);
+  return parseSteps(documents.get(uri) ?? "");
 }
 async function handle(msg) {
   const id = msg.id;
@@ -3190,9 +3189,16 @@ async function handle(msg) {
       )) {
         const resolution = resolveStep(step.text, uriToPath(uri), index);
         if (resolution.kind !== "missing") continue;
-        const newUri = pathToUri(
-          path3.join(resolution.folder, `${resolution.fileStem}.dart`)
+        const targetPath = path3.join(
+          resolution.folder,
+          `${resolution.fileStem}.dart`
         );
+        if (fs3.existsSync(targetPath)) {
+          index.add(targetPath);
+          publishDiagnostics(uri);
+          continue;
+        }
+        const newUri = pathToUri(targetPath);
         actions.push({
           title: "Create step file",
           kind: "quickfix",

@@ -249,4 +249,31 @@ describe("zed LSP server", () => {
       "Future<void> iFillTheForm(WidgetTester tester)",
     );
   });
+
+  it("offers no quick-fix when the step file already exists on disk (stale index)", async () => {
+    const stepPath = path.join(
+      fixtures,
+      "test",
+      "step",
+      "i_fill_the_form.dart",
+    );
+    fs.writeFileSync(stepPath, "// existing\n");
+    try {
+      const actions = await call<Action[]>("textDocument/codeAction", {
+        textDocument: { uri: docUri("test/basic.feature") },
+        range: {
+          start: { line: 5, character: 0 },
+          end: { line: 5, character: 0 },
+        },
+        context: { diagnostics: [] },
+      });
+      expect(actions).toHaveLength(0);
+      await waitUntil(
+        () => (diagnosticsFor("basic.feature")?.length ?? -1) === 0,
+      );
+      expect(diagnosticsFor("basic.feature")).toEqual([]);
+    } finally {
+      fs.rmSync(stepPath);
+    }
+  });
 });

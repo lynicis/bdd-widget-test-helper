@@ -175,6 +175,11 @@ function matchStep(
   };
 }
 
+/** parseFeature + withDataTables in one call: the step list every consumer needs. */
+export function parseSteps(contents: string): ParsedStep[] {
+  return withDataTables(parseFeature(contents).steps, contents);
+}
+
 /** Second pass: mark steps whose next non-empty line is a table row. */
 export function withDataTables(
   steps: ParsedStep[],

@@ -4,7 +4,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
-import { parseFeature, withDataTables } from "./featureParser";
+import { parseSteps } from "./featureParser";
 import { scaffoldStepDart, stepIdentifier } from "./naming";
 import { resolveStep, unresolvedSteps } from "./stepResolver";
 import { StepIndex } from "./stepIndex";
@@ -20,8 +20,7 @@ export class BddCodeActionProvider implements vscode.CodeActionProvider {
     range: vscode.Range,
   ): vscode.CodeAction[] {
     const actions: vscode.CodeAction[] = [];
-    const text = document.getText();
-    const steps = withDataTables(parseFeature(text).steps, text);
+    const steps = parseSteps(document.getText());
     for (let line = range.start.line; line <= range.end.line; line++) {
       const step = steps.find((s) => s.line === line);
       if (!step) continue;
@@ -30,21 +29,28 @@ export class BddCodeActionProvider implements vscode.CodeActionProvider {
         document.uri.fsPath,
         this.index,
       );
-      if (resolution.kind === "missing") {
-        const action = new vscode.CodeAction(
-          "Create step file",
-          vscode.CodeActionKind.QuickFix,
-        );
-        action.command = {
-          title: "Create step file",
-          command: CREATE_STEP_FILE_COMMAND,
-          arguments: [document.uri, line],
-        };
-        action.diagnostics = [...diagnosticsFor(document, this.index)].filter(
-          (d) => d.range.start.line === line,
-        );
-        actions.push(action);
+      if (resolution.kind !== "missing") continue;
+      const targetPath = path.join(
+        resolution.folder,
+        `${resolution.fileStem}.dart`,
+      );
+      if (fs.existsSync(targetPath)) {
+        this.index.add(targetPath); // heal a stale index so diagnostics clear
+        continue;
       }
+      const action = new vscode.CodeAction(
+        "Create step file",
+        vscode.CodeActionKind.QuickFix,
+      );
+      action.command = {
+        title: "Create step file",
+        command: CREATE_STEP_FILE_COMMAND,
+        arguments: [document.uri, line],
+      };
+      action.diagnostics = diagnosticsFor(document, this.index).filter(
+        (d) => d.range.start.line === line,
+      );
+      actions.push(action);
     }
     return actions;
   }
@@ -78,6 +84,13 @@ export async function createStepFile(
     return;
   }
   const filePath = path.join(resolution.folder, `${resolution.fileStem}.dart`);
+  if (fs.existsSync(filePath)) {
+    index.add(filePath); // heal the stale index so diagnostics clear
+    vscode.window.showInformationMessage(
+      "bdd-widget-test-helper: step file already exists.",
+    );
+    return;
+  }
   fs.mkdirSync(resolution.folder, { recursive: true });
   const content = scaffoldStepDart(step.text, step.hasDataTable);
   fs.writeFileSync(filePath, content);

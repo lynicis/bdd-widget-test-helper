@@ -2,7 +2,7 @@
  * DefinitionProvider + DocumentLinkProvider for .feature files.
  */
 import * as vscode from "vscode";
-import { parseFeature, withDataTables, ParsedStep } from "./featureParser";
+import { parseFeature, parseSteps, ParsedStep } from "./featureParser";
 import { resolveStep, stepDefinitionLocation } from "./stepResolver";
 import { StepIndex } from "./stepIndex";
 
@@ -29,8 +29,7 @@ export class BddDocumentLinkProvider implements vscode.DocumentLinkProvider {
   constructor(private index: StepIndex) {}
 
   provideDocumentLinks(document: vscode.TextDocument): vscode.DocumentLink[] {
-    const parsed = parseFeature(document.getText());
-    const steps = withDataTables(parsed.steps, document.getText());
+    const steps = parseSteps(document.getText());
     const links: vscode.DocumentLink[] = [];
     for (const step of steps) {
       const resolution = resolveStep(

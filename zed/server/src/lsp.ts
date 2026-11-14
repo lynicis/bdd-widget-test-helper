@@ -14,14 +14,11 @@
 // Configuration comes from workspace/configuration section "bddWidgetTestHelper"
 // (Zed shim: lsp.bdd-widget-test.settings):
 //   { stepFolderName, relativeToTestFolder, externalSteps, showUnresolvedStepWarnings }
+import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import { BddOptions, defaultOptions } from "../../../src/bddOptions";
-import {
-  ParsedStep,
-  parseFeature,
-  withDataTables,
-} from "../../../src/featureParser";
+import { ParsedStep, parseSteps } from "../../../src/featureParser";
 import { scaffoldStepDart } from "../../../src/naming";
 import { StepIndex } from "../../../src/stepIndex";
 import {
@@ -225,8 +222,7 @@ function publishDiagnostics(uri: string): void {
 }
 
 function stepsOf(uri: string): ParsedStep[] {
-  const text = documents.get(uri) ?? "";
-  return withDataTables(parseFeature(text).steps, text);
+  return parseSteps(documents.get(uri) ?? "");
 }
 
 // ----------------------------------------------------------------- handlers ---
@@ -331,9 +327,17 @@ async function handle(msg: JsonRpcMessage): Promise<void> {
       )) {
         const resolution = resolveStep(step.text, uriToPath(uri), index);
         if (resolution.kind !== "missing") continue;
-        const newUri = pathToUri(
-          path.join(resolution.folder, `${resolution.fileStem}.dart`),
+        const targetPath = path.join(
+          resolution.folder,
+          `${resolution.fileStem}.dart`,
         );
+        if (fs.existsSync(targetPath)) {
+          // stale index: file already on disk, so record it and re-publish
+          index.add(targetPath);
+          publishDiagnostics(uri);
+          continue;
+        }
+        const newUri = pathToUri(targetPath);
         actions.push({
           title: "Create step file",
           kind: "quickfix",

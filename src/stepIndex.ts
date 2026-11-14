@@ -78,15 +78,16 @@ export class StepIndex {
     return best;
   }
 
+  /** Resolves the effective bdd options for a feature file (fresh per call). */
+  optionsFor(featurePath: string): BddOptions {
+    return findOptions(featurePath, this.workspaceRoot, this.getDefaults);
+  }
+
   /** Indexes the step folder(s) for a feature file, if not done yet. */
-  ensureIndexed(featurePath: string): void {
-    const options = findOptions(
-      featurePath,
-      this.workspaceRoot,
-      this.getDefaults,
-    );
-    const baseDir = stepFolderBaseDir(featurePath, options, this.workspaceRoot);
-    const stepFolder = path.resolve(baseDir, options.stepFolderName);
+  ensureIndexed(featurePath: string, options?: BddOptions): void {
+    const opts = options ?? this.optionsFor(featurePath);
+    const baseDir = stepFolderBaseDir(featurePath, opts, this.workspaceRoot);
+    const stepFolder = path.resolve(baseDir, opts.stepFolderName);
     const rootKey = stepFolder;
     if (this.indexedRoots.has(rootKey)) return;
     this.indexFolder(stepFolder);
@@ -114,31 +115,30 @@ export class StepIndex {
   }
 
   /** Resolves where a NEW step file for a feature would be created. */
-  targetPathForNewStep(featurePath: string): {
+  targetPathForNewStep(
+    featurePath: string,
+    options?: BddOptions,
+  ): {
     folder: string;
     options: BddOptions;
   } {
-    const options = findOptions(
-      featurePath,
-      this.workspaceRoot,
-      this.getDefaults,
-    );
-    const baseDir = stepFolderBaseDir(featurePath, options, this.workspaceRoot);
-    return { folder: path.resolve(baseDir, options.stepFolderName), options };
+    const opts = options ?? this.optionsFor(featurePath);
+    const baseDir = stepFolderBaseDir(featurePath, opts, this.workspaceRoot);
+    return {
+      folder: path.resolve(baseDir, opts.stepFolderName),
+      options: opts,
+    };
   }
 
   /** An external step (package: uri) that matches the file name, if any. */
   findExternalStep(
     fileStem: string,
     featurePath: string,
+    options?: BddOptions,
   ): StepIndexEntry | undefined {
-    const options = findOptions(
-      featurePath,
-      this.workspaceRoot,
-      this.getDefaults,
-    );
+    const opts = options ?? this.optionsFor(featurePath);
     const file = `${fileStem}.dart`;
-    const external = options.externalSteps.find(
+    const external = opts.externalSteps.find(
       (l) => l.endsWith(file) || l.includes(`/${file}`),
     );
     if (!external) return undefined;
