@@ -3,101 +3,81 @@
 [![Visual Studio Marketplace Version](https://vsmarketplacebadges.dev/version/lynicis.bdd-widget-test-helper.svg)](https://marketplace.visualstudio.com/items?itemName=lynicis.bdd-widget-test-helper)
 ![Open VSX Version](https://img.shields.io/open-vsx/v/lynicis/bdd-widget-test-helper)
 
-VS Code / VSCodium extension for Flutter developers practicing A-TDD with the
-[`bdd_widget_test`](https://pub.dev/packages/bdd_widget_test) package. Jump
-from any Gherkin step in a `.feature` file straight to the Dart step
-definition — and scaffold the ones that don't exist yet.
+**Ctrl+Click any Gherkin step in a `.feature` file and land on its Dart step
+function — or scaffold the file that is missing.** Works offline, with no Dart
+tooling, in VS Code, VSCodium and Zed.
 
-Works in both **VS Code** and **VSCodium** (only the open-source `vscode` API,
-no proprietary Microsoft services), and is published to both the
-[VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=lynicis.bdd-widget-test-helper)
-and [Open VSX](https://open-vsx.org/extension/lynicis/bdd-widget-test-helper).
+`bdd_widget_test` generates those step files at build time and gives you no way
+to navigate them from the `.feature` file. This extension does that navigation
+(go-to-definition, document links), plus missing-step warnings and a one-click
+"Create step file" quick-fix, by re-implementing the package's naming rules in
+TypeScript. No generator run, no analyzer, no network.
+
+Status: **0.2.x, pre-1.0, actively maintained.** Published to the VS Code
+Marketplace and Open VSX; the Zed extension is installed from `zed/` as a dev
+extension. [Issues and pull
+requests](https://github.com/lynicis/bdd-widget-test-helper/issues) are welcome.
+
+> This resolves **`bdd_widget_test` naming only**. Projects using a different
+> step generator or runner (`flutter_gherkin`, custom step folders with their
+> own naming) get no matches here — use their tooling instead.
 
 ## Install
 
-- VS Code Marketplace: search **BDD Widget Test Helper** in the Extensions
-  view, or follow the badge above.
-- VSCodium / Open VSX: search **BDD Widget Test Helper** in the Extensions
-  view (VSCodium uses Open VSX by default).
-- From a VSIX: `code --install-extension bdd-widget-test-helper-<version>.vsix`
-  (build one with `bun run package:vsix`).
+| Editor            | How                                                                                                                       |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| VS Code           | Extensions view → search **BDD Widget Test Helper**, or `code --install-extension bdd-widget-test-helper-<version>.vsix` |
+| VSCodium          | Extensions view (Open VSX is the default registry) → search **BDD Widget Test Helper**                                    |
+| Zed               | **Extensions → Install Dev Extension → `zed/`** (after `bun run build:zed`) — see [`zed/README.md`](zed/README.md)         |
 
-The extension activates for `.feature` files and needs no Dart tooling at
-runtime.
+The extension activates on `.feature` files and needs no configuration.
 
-## Zed
+## Try it in a minute
 
-The same helper is available for the [Zed](https://zed.dev) editor as a
-sub-extension in [`zed/`](zed/README.md). Zed has no direct extension API for
-diagnostics, go-to-definition or quick-fixes, so it is delivered over LSP by a
-zero-dependency Node server (`zed/server/server.cjs`) that reuses this repo's
-TypeScript core — the `bdd_widget_test` naming/resolution contract stays
-single-sourced.
+1. Open any `.feature` file in a Flutter project that already uses
+   `bdd_widget_test`.
+2. Put the cursor on a step line and press **F12** (or Ctrl/Cmd+Click). The
+   matching `step/*.dart` file opens at its `Future<void>` line.
+3. On a step with no file yet, a warning appears. Open the lightbulb and choose
+   **Create step file** — the generated content is what `bdd_widget_test` would
+   write, with the same imports, parameter types and `/// Usage:` comment.
 
-Install (dev): `bun run build:zed`, then in Zed **Extensions → Install Dev
-Extension → `zed/`**. Settings go under `lsp.bdd-widget-test.settings` with the
-same keys as `bddWidgetTestHelper.*` (`stepFolderName`, `relativeToTestFolder`,
-`externalSteps`, `showUnresolvedStepWarnings`). See [`zed/README.md`](zed/README.md)
-for details. Zed exposes no document links, so Ctrl+Click underline is absent
-there but go-to-definition covers the same navigation.
+## What you get
 
-## Features
+- **Go to definition and document links** on every step line (`Given`, `When`,
+  `Then`, `And`, `But`, `*`) in all 80 official Gherkin dialects, including
+  every `# language:` header.
+- **Faithful names** — ported line-by-line from `bdd_widget_test`, not guessed:
+  - `I tap text` → `step/i_tap_text.dart`, function `iTapText`
+  - `{...}` parameters are removed from the name and typed `String` / `num` /
+    `bool` / `dynamic` in the scaffold
+  - Scenario Outline `<placeholders>` are removed and become `dynamic`
+    parameters
+  - accented Latin folds to ASCII (`çalışıyor` → `calisiyor`)
+  - steps with a data table get `bdd.DataTable dataTable` and its import
+  - the 20 built-in steps (`the app is running`, `I see {..} text`, …) are
+    recognised and never reported missing
+  - steps that cannot form a Dart identifier (non-Latin script, leading digit
+    or underscore) get a rename warning instead of a broken file
+- **Unresolved-step diagnostics**, recomputed on edit and on step-file changes
+  (200 ms debounce), with a quick-fix that scaffolds the file.
+- **Step index cache** — step folders are indexed once and kept current through
+  a file watcher, not rescanned per keystroke.
+- **Syntax highlighting and a cucumber file icon** for `.feature` files.
 
-- **Go to definition (F12 / Ctrl+Click)** on every step line
-  (`Given` / `When` / `Then` / `And` / `But`, any Gherkin dialect) jumps to
-  the matching Dart step file — and to the function inside it. Also exposed
-  as document links (Ctrl+Click underline).
-- **Faithful name mapping** — the extension replicates `bdd_widget_test`'s
-  generator exactly:
-  - step text → snake_case file name (`I tap text` → `step/i_tap_text.dart`)
-  - step text → camelCase function name (`I tap text` → `iTapText`)
-  - `{...}` parameters are stripped from the name; quoted / numeric / bool
-    parameters become `String` / `num` / `bool` in the scaffold, anything
-    else `dynamic`
-  - `<placeholder>` from Scenario Outlines is stripped from the name and
-    becomes a `dynamic` parameter
-  - steps with a data table get the `bdd.DataTable dataTable` parameter and
-    import
-  - accented Latin is folded to ASCII (`çalışıyor` → `calisiyor`), so
-    Turkish (and every other Latin-script Gherkin dialect) works
-  - built-in steps (`the app is running`, `I see {..} text`, …) are known
-    and never reported missing
-  - steps that cannot produce a valid Dart identifier (non-Latin scripts,
-    leading digit/underscore) are reported with a rename hint
-- **"Create step file" quick-fix** — on an unresolved step, the lightbulb
-  offers to scaffold the missing step file with the exact content
-  `bdd_widget_test` would generate.
-- **Diagnostics** — unresolved steps are reported as warnings.
-- **File icon** — `.feature` files show a cucumber icon in the explorer and
-  editor tabs. It appears under icon themes that enable language icons and
-  have no `.feature` icon of their own — the default Seti theme and most
-  third-party themes. Uniform-icon themes (Minimal) and themes that switch
-  language icons off (VS Code Modern Icons) show their own generic icon.
-- **Step index cache** — step folders are indexed once and updated
-  incrementally through a `FileSystemWatcher`; nothing is rescanned per
-  keystroke.
-- **Syntax highlighting** — TextMate grammar for `.feature` files with
-  keyword, tag, placeholder, parameter, table and docstring scopes,
-  including Turkish and other common dialect keywords.
+## Which step file is used
 
-## Step file lookup
+Resolution order mirrors `bdd_widget_test`:
 
-Mirrors `bdd_widget_test`'s resolution order:
+1. The 20 built-in steps — always resolve as built-ins, so a local
+   `i_see_text.dart` is *not* used for `I see {..} text`.
+2. The `step/` folder for the feature (recursive; the nearest match wins).
+3. `externalSteps` entries such as `package:my_lib/step/i_tap_text.dart`,
+   resolved through `.dart_tool/package_config.json`.
 
-1. The built-in step set shipped with `bdd_widget_test` — checked first, so
-   built-in steps always resolve as built-ins and never need a file (a local
-   `i_see_text.dart` is therefore _not_ used for `I see {..} text`).
-2. `step/` folder next to the feature file (or the folder configured via
-   `stepFolderName`, relative to the feature when it starts with `./` or
-   `../`, otherwise relative to the test folder per `relativeToTestFolder`),
-   searched recursively — the nearest match to the feature wins.
-3. `externalSteps` entries (e.g. `package:my_lib/step/i_tap_text.dart`),
-   resolved through `.dart_tool/package_config.json` when possible.
-
-Options are read from `bdd_options.yaml` (nearest one walking up from the
-feature file) and `build.yaml`
-(`targets → … → builders → bdd_widget_test → options`), falling back to the
-extension settings:
+Step-folder location comes from `bdd_options.yaml` (nearest file walking up to
+the workspace root), then `build.yaml`
+(`targets → … → builders → bdd_widget_test → options`), then these settings:
 
 | Setting                                          | Default  | Meaning                                        |
 | ------------------------------------------------ | -------- | ---------------------------------------------- |
@@ -106,116 +86,69 @@ extension settings:
 | `bddWidgetTestHelper.externalSteps`              | `[]`     | Extra `package:` step locations                |
 | `bddWidgetTestHelper.showUnresolvedStepWarnings` | `true`   | Warn on unresolved steps                       |
 
-Commands: **BDD: Create step file** (also available as quick-fix),
-**BDD: Rebuild step index**.
+Commands: **BDD: Create step file** (also the quick-fix) and **BDD: Rebuild
+step index**.
 
-## Multilingual Gherkin
+## Gherkin details
 
-All 80 dialects of the official Gherkin dialect table are supported
-(`# language: tr` header et al.), including Turkish:
+- `And` / `But` / `*` inherit the previous step keyword, exactly as Gherkin
+  specifies.
+- `Background:` steps resolve like any other step.
+- `Examples:` rows are never mistaken for steps; `<param>` placeholders map to
+  `dynamic` parameters in scaffolds.
+- Steps inside docstrings (triple-quoted or triple-backtick fences) and `#`
+  comments are ignored.
 
-```gherkin
-# language: tr
-Özellik: Türkçe özellik
-  Senaryo: Türkçe senaryo
-    Diyelim ki uygulama çalışıyor
-    Eğer ki butaya basarım
-    O zaman ekranı görürüm
-```
+## Zed
 
-`Diyelim ki uygulama çalışıyor` resolves to `step/uygulama_calisiyor.dart`
-and function `uygulamaCalisiyor` — the exact names `bdd_widget_test`
-generates.
-
-## And/But inheritance, Background, Outlines
-
-- `And` / `But` / `*` steps inherit the effective keyword of the previous
-  step in the same block, exactly as Gherkin specifies.
-- Steps in `Background:` sections are resolved like any other step.
-- `Examples:` tables are never mistaken for steps; `<param>` placeholders
-  inside outline steps map to `dynamic` parameters in scaffolds.
-- Steps inside docstrings (`"""` / ` ``` `) and `# comments` are ignored.
+Zed has no extension API for diagnostics, go-to-definition or quick-fixes, so
+the same TypeScript core is served over LSP by a bundled zero-dependency Node
+server (`zed/server/server.cjs`). Settings live under
+`lsp.bdd-widget-test.settings` with the same keys as above. Document links do
+not exist in Zed; go-to-definition covers the same navigation. Details:
+[`zed/README.md`](zed/README.md).
 
 ## Development
 
 ```bash
-bun install
-bun run compile        # tsc --noEmit type-check + esbuild bundle → dist/
-bun run check-types    # tsc --noEmit only
-bun run build:zed      # type-check + bundle the Zed LSP server → zed/server/server.cjs
-bun run lint           # ESLint (flat config)
-bun run test:unit      # vitest unit tests (naming, parser, yaml)
-bun run test           # compile + compile tests + integration tests in VS Code
-bun run package        # production bundle (minified, no sourcemap)
-bun run package:vsix   # build a .vsix with vsce
+bun install               # bun is the package manager (bun.lock)
+bun run compile           # type-check + esbuild bundle → dist/extension.js
+bun run check-types       # tsc --noEmit only
+bun run lint              # ESLint (TS, JS, JSON, Markdown)
+bun run test:unit         # vitest unit tests (plain Node, no VS Code)
+bun run build:zed         # rebuild zed/server/server.cjs (committed, generated)
+bun run test              # compile + integration tests in a real VS Code window
+bun run package:vsix      # build a .vsix
 ```
 
-`bun run test` compiles the integration tests with `tsconfig.test.json` and runs
-them through `@vscode/test-electron` (`test/runTests.js`) with
-`src/test/fixtures` as the workspace; the first run downloads a VS Code build
-into `.vscode-test/`. Node 18+ works locally (CI uses Node 24). What CI runs
-on a published release:
+Integration tests need a display: `node test/runTests.js` on macOS, or
+`xvfb-run -a node test/runTests.js` on Linux; the first run downloads VS Code
+into `.vscode-test/`. The full CI sequence is in
+[`CONTRIBUTING.md`](CONTRIBUTING.md).
 
-```bash
-bun run compile && bunx tsc --project tsconfig.test.json && bunx vitest run && xvfb-run -a node test/runTests.js
-```
+| Path                                         | Purpose                                                           |
+| -------------------------------------------- | ----------------------------------------------------------------- |
+| `src/`                                       | VS Code extension; `extension.ts` is the entry point              |
+| `src/gherkin/dialects.json`                  | Bundled Gherkin dialect table (80 languages, generated)           |
+| `src/test/unit/`, `src/test/integration/`    | Vitest and `@vscode/test-electron` suites                         |
+| `zed/`                                       | Zed extension, Rust shim and the LSP server source                |
+| `syntaxes/`, `language-configuration.json`   | `.feature` grammar and editor behaviour                           |
+| `esbuild.js`, `esbuild-zed.js`, `test/`      | Bundlers and the integration-test launcher                        |
 
-Project layout:
+The naming and option-lookup code is a deliberate port of `bdd_widget_test`;
+read the port-fidelity rule in [`CONTRIBUTING.md`](CONTRIBUTING.md) before
+changing it. `src/naming.ts`, `bddOptions.ts`, `stepIndex.ts`,
+`stepResolver.ts`, `featureParser.ts` and `simpleYaml.ts` must stay free of
+`vscode` imports — they also back the Zed server.
 
-```text
-src/
-  extension.ts            activation, providers, diagnostics wiring
-  featureParser.ts        Gherkin parser (dialects, And/But inheritance)
-  gherkin/dialects.json   official Gherkin dialect table (80 languages)
-  naming.ts               port of bdd_widget_test step naming (verified)
-  diacritics.generated.ts port of the diacritic package's folding map
-  bddOptions.ts           bdd_options.yaml / build.yaml reader
-  simpleYaml.ts           minimal YAML subset parser
-  stepIndex.ts            cached, watcher-updated step file index
-  stepResolver.ts         step → file resolution chain
-  providers.ts            DefinitionProvider + DocumentLinkProvider
-  codeActions.ts          "Create step file" quick-fix + diagnostics
-  test/unit/              vitest unit tests
-  test/integration/       @vscode/test-electron integration tests
-  test/fixtures/          sample feature project used by tests
-zed/                          Zed editor extension (see zed/README.md)
-  extension.toml               Zed manifest (language + grammar + LSP)
-  src/lib.rs                   Rust shim that launches the embedded Node server
-  server/src/lsp.ts            LSP server source (uses the shared src/ core)
-  server/server.cjs            GENERATED bundle — do not hand-edit (bun run build:zed)
-  languages/gherkin/           Gherkin language config + tree-sitter queries
-  icon.png                     Zed extension icon
-syntaxes/feature.tmLanguage.json   TextMate grammar
-language-configuration.json        .feature editor behaviour (comments, brackets)
-esbuild.js                         bundler (src/extension.ts → dist/extension.js)
-esbuild-zed.js                     bundler (zed/server/src/lsp.ts → zed/server/server.cjs)
-eslint.config.mts                  ESLint flat config
-test/runTests.js                   @vscode/test-electron launcher
-media/icon.png                     extension icon
-media/feature-icon.svg             cucumber file icon for .feature files
-.github/workflows/publish.yml      CI: test, then publish to both marketplaces
-```
+## More
 
-### Port fidelity
-
-`src/naming.ts` is a line-by-line port of `bdd_widget_test`'s
-`string_utils.dart` + `step_generator.dart` (underscore/camelize/parseRawStepLine/
-stepIdentifier, `genericParameterType`, `examplePlaceholders`,
-`predefinedSteps`) and the `diacritic` package's replacement map;
-`src/naming.ts#scaffoldStepDart` mirrors `GenericStep.content` (imports,
-`Usage` comment, parameter typing). The unit tests assert the upstream
-package's own fixtures, e.g.
-`'los diacríticos son útil'` → `los_diacriticos_son_util`,
-`"I see {'0'} text"` → `i_see_text`, `'there are <start> cucumbers'` →
-`thereAreCucumbers`, `'2FA is on'` → rejected.
-
-## Contributing
-
-Contributions are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) covers the dev
-setup, the `bdd_widget_test` port-fidelity rule, and the PR checklist.
-[SECURITY.md](SECURITY.md) explains how to report a vulnerability privately.
-This project follows the [Contributor Covenant](CODE_OF_CONDUCT.md).
+- Contributing, port-fidelity rules and the PR checklist:
+  [`CONTRIBUTING.md`](CONTRIBUTING.md)
+- Reporting a vulnerability: [`SECURITY.md`](SECURITY.md)
+- Community standards: [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md)
+- Changelog: [`CHANGELOG.md`](CHANGELOG.md)
 
 ## License
 
-MIT
+MIT — see [`LICENSE`](LICENSE).
